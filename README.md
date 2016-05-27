@@ -1,2 +1,2 @@
 # debussy
-A midi player running on an embedded system
+A physically based high quality midi synthesizer for embedded system
