@@ -1,6 +1,8 @@
 #ifndef __lcd__
 #define __lcd__
 
+#include <avr.h>
+
 /*
  * <lcd> public
  */

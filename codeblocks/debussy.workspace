@@ -3,6 +3,6 @@
 	<Workspace title="debussy">
 		<Project filename="uiprogram.cbp" />
 		<Project filename="debussy.cbp" />
-		<Project filename="serverprogram.cbp" />
+		<Project filename="backendprogram.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

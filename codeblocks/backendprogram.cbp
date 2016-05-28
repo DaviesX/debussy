@@ -2,14 +2,14 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="serverprogram" />
+		<Option title="backendprogram" />
 		<Option pch_mode="2" />
 		<Option compiler="avr-gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="../build/serverprogram.elf" prefix_auto="1" extension_auto="0" />
+				<Option output="../build/backendprogram.elf" prefix_auto="1" extension_auto="0" />
 				<Option working_dir="" />
-				<Option object_output="../build/serverprogram" />
+				<Option object_output="../build/backendprogram" />
 				<Option type="5" />
 				<Option compiler="avr-gcc" />
 				<Compiler>
@@ -17,9 +17,9 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="../build/serverprogram.elf" prefix_auto="1" extension_auto="0" />
+				<Option output="../build/backendprogram.elf" prefix_auto="1" extension_auto="0" />
 				<Option working_dir="" />
-				<Option object_output="../build/serverprogram" />
+				<Option object_output="../build/backendprogram" />
 				<Option type="5" />
 				<Option compiler="avr-gcc" />
 				<Compiler>

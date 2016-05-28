@@ -41,7 +41,10 @@
 		<Linker>
 			<Add option="--lm" />
 		</Linker>
-		<Unit filename="../src/debussy/actionstates.h" />
+		<Unit filename="../src/debussy/actionprotocols.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/actionprotocols.h" />
 		<Unit filename="../src/debussy/audioplayer.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -50,14 +53,26 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/avr.h" />
-		<Unit filename="../src/debussy/esram.c">
+		<Unit filename="../src/debussy/display.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../src/debussy/esram.h" />
+		<Unit filename="../src/debussy/display.h" />
+		<Unit filename="../src/debussy/exteeprom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/exteeprom.h" />
+		<Unit filename="../src/debussy/extsram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/extsram.h" />
 		<Unit filename="../src/debussy/filesystem.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/filesystem.h" />
+		<Unit filename="../src/debussy/hidusb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/hidusb.h" />
 		<Unit filename="../src/debussy/keypad.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -66,10 +81,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/lcd.h" />
-		<Unit filename="../src/debussy/multimcubus.c">
+		<Unit filename="../src/debussy/memory.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../src/debussy/multimcubus.h" />
+		<Unit filename="../src/debussy/memory.h" />
 		<Unit filename="../src/debussy/noteplayer.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -78,10 +93,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/speaker.h" />
-		<Unit filename="../src/debussy/usb.c">
+		<Unit filename="../src/debussy/spimcu.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../src/debussy/usb.h" />
+		<Unit filename="../src/debussy/spimcu.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
