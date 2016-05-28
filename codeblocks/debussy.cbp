@@ -41,6 +41,7 @@
 		<Linker>
 			<Add option="--lm" />
 		</Linker>
+		<Unit filename="../src/debussy/actionstates.h" />
 		<Unit filename="../src/debussy/audioplayer.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -49,6 +50,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/avr.h" />
+		<Unit filename="../src/debussy/esram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/esram.h" />
 		<Unit filename="../src/debussy/filesystem.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -61,6 +66,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/lcd.h" />
+		<Unit filename="../src/debussy/multimcubus.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/multimcubus.h" />
 		<Unit filename="../src/debussy/noteplayer.c">
 			<Option compilerVar="CC" />
 		</Unit>
