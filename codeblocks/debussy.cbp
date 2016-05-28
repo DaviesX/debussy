@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="debussy" />
+		<Option pch_mode="2" />
+		<Option compiler="avr-gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../build/debussy" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="../build/debussy" />
+				<Option type="2" />
+				<Option compiler="avr-gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../build/debussy" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="../build/debussy" />
+				<Option type="2" />
+				<Option compiler="avr-gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-Os" />
+					<Add option="-Wall" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-mmcu=atmega32" />
+			<Add directory="../src/debussy" />
+		</Compiler>
+		<Linker>
+			<Add option="--lm" />
+		</Linker>
+		<Unit filename="../src/debussy/audioplayer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/audioplayer.h" />
+		<Unit filename="../src/debussy/avr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/avr.h" />
+		<Unit filename="../src/debussy/filesystem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/filesystem.h" />
+		<Unit filename="../src/debussy/keypad.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/keypad.h" />
+		<Unit filename="../src/debussy/lcd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/lcd.h" />
+		<Unit filename="../src/debussy/noteplayer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/noteplayer.h" />
+		<Unit filename="../src/debussy/speaker.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/speaker.h" />
+		<Unit filename="../src/debussy/usb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/usb.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
