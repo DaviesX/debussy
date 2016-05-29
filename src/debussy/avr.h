@@ -3,13 +3,11 @@
 
 #define F_CPU   16000000UL
 
-#include <inttypes.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 typedef int32_t int_farptr_t;
 typedef uint32_t uint_farptr_t;
-typedef unsigned char bool;
-#define true    1
-#define false   0
 #define nullptr (void*) 0X0
 struct pin {
         uint8_t* port;

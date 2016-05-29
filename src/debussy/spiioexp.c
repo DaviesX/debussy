@@ -17,9 +17,12 @@ void spiioexp_sys_init()
 {
 }
 
-uint8_t spiioexp_read_pins(struct spiioexp* self)
+static uint8_t __spiioexp_read_byte()
 {
-        return 0;
+        while(!GET_BIT(SPSR, SPIF)) {
+                continue;
+        }
+        return SPDR;
 }
 
 static void __spiioexp_write_byte(uint8_t byte)
@@ -30,7 +33,7 @@ static void __spiioexp_write_byte(uint8_t byte)
         }
 }
 
-void spiioexp_init_write_mode(struct spiioexp* self, struct pin* cs)
+static void __spiioexp_configure(struct spiioexp* self, const struct pin* cs, const bool is_read)
 {
         self->cs = *cs;
 
@@ -38,25 +41,54 @@ void spiioexp_init_write_mode(struct spiioexp* self, struct pin* cs)
         SET_BIT(*self->cs.port, self->cs.pinno);
 
         // configure to be master output.
-        SET_BIT(SPI_DDR, MOSI);
+        if (is_read)
+                SET_BIT(SPI_DDR, MISO);
+        else
+                SET_BIT(SPI_DDR, MOSI);
         SET_BIT(SPI_DDR, SCK);
         SET_BIT(SPCR, SPE);
         SET_BIT(SPCR, MSTR);
-        // SET_BIT(SPSR, SPI2X);
-        SET_BIT(SPCR, SPR0);
+        // double the spi clock rate.
+        SET_BIT(SPSR, SPI2X);
 
-        CLR_BIT(SPI_PORT, SS);
         // configure IO direction
         CLR_BIT(*self->cs.port, self->cs.pinno);
         {
-                // op code.
+                // op code (write).
                 __spiioexp_write_byte(0b01000000);
                 // select IODIR register.
                 __spiioexp_write_byte(0x0);
-                // set it to output.
-                __spiioexp_write_byte(0x0);
+                // set it to iodir (0X00, output mode; 0XFF input mode).
+                __spiioexp_write_byte(is_read ? 0XFF : 0X00);
         }
         SET_BIT(*self->cs.port, self->cs.pinno);
+}
+
+void spiioexp_init_read_mode(struct spiioexp* self, struct pin* cs)
+{
+        __spiioexp_configure(self, cs, true);
+}
+
+uint8_t spiioexp_read_pins(struct spiioexp* self)
+{
+        // fetch data from GPIO register
+        uint8_t data;
+        CLR_BIT(*self->cs.port, self->cs.pinno);
+        {
+                // op code (read).
+                __spiioexp_write_byte(0b01000001);
+                // select GPIO register address.
+                __spiioexp_write_byte(0x9);
+                // data transmission.
+                data = __spiioexp_read_byte();
+        }
+        SET_BIT(*self->cs.port, self->cs.pinno);
+        return data;
+}
+
+void spiioexp_init_write_mode(struct spiioexp* self, struct pin* cs)
+{
+        __spiioexp_configure(self, cs, false);
 }
 
 void spiioexp_write_pins(struct spiioexp* self, uint8_t data)
@@ -64,9 +96,9 @@ void spiioexp_write_pins(struct spiioexp* self, uint8_t data)
         // put data to GPIO register
         CLR_BIT(*self->cs.port, self->cs.pinno);
         {
-                // op code.
+                // op code (write).
                 __spiioexp_write_byte(0b01000000);
-                // slect GPIO register address.
+                // select GPIO register address.
                 __spiioexp_write_byte(0x9);
                 // data transmission.
                 __spiioexp_write_byte(data);

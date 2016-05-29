@@ -7,8 +7,8 @@ void test_gpio_flash_led()
 {
         uint8_t led = 0, led2 = 0;
         struct pin cs, cs2;
-        pin_init(&cs, PORTB, DDRB, 4);
-        pin_init(&cs2, PORTB, DDRB, 0);
+        pin_init(&cs, PORTD, DDRD, 0);
+        pin_init(&cs2, PORTD, DDRD, 1);
         struct spiioexp ioexp, ioexp2;
         spiioexp_init_write_mode(&ioexp, &cs);
         spiioexp_init_write_mode(&ioexp2, &cs2);
