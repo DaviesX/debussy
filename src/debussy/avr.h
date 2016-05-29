@@ -11,6 +11,17 @@ typedef unsigned char bool;
 #define true    1
 #define false   0
 #define nullptr (void*) 0X0
+struct pin {
+        uint8_t* port;
+        uint8_t* ddr;
+        uint8_t  pinno;
+};
+#define pin_init(__self, __port, __ddr, __pinno)        \
+{                                                       \
+        (__self)->port = (uint8_t *) &(__port);         \
+        (__self)->ddr = (uint8_t *) &(__ddr);           \
+        (__self)->pinno = (__pinno);                    \
+}
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -30,7 +41,9 @@ typedef unsigned char bool;
 void avr_init();
 void avr_wait(uint16_t msec);
 void avr_wait2(uint16_t msec, uint16_t (*callback) (), void* data);
+void avr_wait_micro(uint16_t microsec);
 void avr_nop(uint16_t ms);
 void avr_set_timer1_ctc(uint32_t milli);
+
 
 #endif  // AVR_H_INCLUDED

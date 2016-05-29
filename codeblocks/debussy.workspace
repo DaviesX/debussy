@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="debussy">
-		<Project filename="uiprogram.cbp" />
+		<Project filename="uiprogram.cbp">
+			<Depends filename="debussy.cbp" />
+		</Project>
 		<Project filename="debussy.cbp" />
-		<Project filename="backendprogram.cbp" />
+		<Project filename="backendprogram.cbp">
+			<Depends filename="debussy.cbp" />
+		</Project>
 	</Workspace>
 </CodeBlocks_workspace_file>

@@ -1,6 +1,0 @@
-#ifndef SPIMCU_H_INCLUDED
-#define SPIMCU_H_INCLUDED
-
-
-
-#endif // SPIMCU_H_INCLUDED
