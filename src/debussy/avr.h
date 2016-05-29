@@ -1,5 +1,5 @@
-#ifndef __avr__
-#define __avr__
+#ifndef AVR_H_INCLUDED
+#define AVR_H_INCLUDED
 
 #define F_CPU   16000000UL
 
@@ -33,4 +33,4 @@ void avr_wait2(uint16_t msec, uint16_t (*callback) (), void* data);
 void avr_nop(uint16_t ms);
 void avr_set_timer1_ctc(uint32_t milli);
 
-#endif
+#endif  // AVR_H_INCLUDED

@@ -45,6 +45,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/actionprotocols.h" />
+		<Unit filename="../src/debussy/adc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/adc.h" />
 		<Unit filename="../src/debussy/audioplayer.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -53,7 +57,14 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/avr.h" />
+		<Unit filename="../src/debussy/chipselect.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../src/debussy/chipselect.h" />
+		<Unit filename="../src/debussy/dac.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/dac.h" />
 		<Unit filename="../src/debussy/display.c">
 			<Option compilerVar="CC" />
 		</Unit>

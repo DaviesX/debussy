@@ -1,5 +1,5 @@
-#ifndef __lcd__
-#define __lcd__
+#ifndef LCD_H_INCLUDED
+#define LCD_H_INCLUDED
 
 #include <avr.h>
 
@@ -15,4 +15,4 @@ void lcd_puts(const char *s);
 void lcd_puti16(uint16_t value);
 void lcd_puti16n(uint16_t value, int n);
 
-#endif
+#endif  // LCD_H_INCLUDED

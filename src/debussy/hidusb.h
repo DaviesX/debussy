@@ -1,6 +1,6 @@
-#ifndef USB_H_INCLUDED
-#define USB_H_INCLUDED
+#ifndef HIDUSB_H_INCLUDED
+#define HIDUSB_H_INCLUDED
 
 
 
-#endif // USB_H_INCLUDED
+#endif // HIDUSB_H_INCLUDED
