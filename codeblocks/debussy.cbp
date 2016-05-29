@@ -53,6 +53,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/avr.h" />
+		<Unit filename="../src/debussy/chipselect.h" />
 		<Unit filename="../src/debussy/display.c">
 			<Option compilerVar="CC" />
 		</Unit>
