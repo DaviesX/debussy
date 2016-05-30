@@ -3,7 +3,7 @@
 
 #include <avr.h>
 
-// 8 bit chipselect D-latch device
+// logical chip select pins.
 enum LatchPins {
         CS_LATCH0,
         CS_LATCH1,
@@ -16,31 +16,43 @@ enum LatchPins {
 };
 
 /*
- * <chipselect> public
+ * <chip_select> public
  */
-inline void cs_init()
+void cs_sys_init();
+
+// fast implementation.
+static inline void __cs2_enable_exclusive(const uint8_t pin)
 {
 }
 
-inline void cs_enable_exclusive(uint8_t pin)
+static inline void __cs2_disable_exclusive(const uint8_t pin)
 {
 }
 
-inline void cs_disable_exclusive(uint8_t pin)
+static inline void __cs2_enable_inclusive(const uint8_t pin)
 {
 }
 
-inline void cs_enable_inclusive(uint8_t pin)
+static inline void __cs2_disable_inclusive(const uint8_t pin)
 {
 }
 
-inline void cs_disable_inclusive(uint8_t pin)
+static inline void __cs2_clear()
 {
 }
 
-inline void cs_clear()
-{
-}
+// fallback implementations.
+void __cs_enable_exclusive(const uint8_t pin);
+void __cs_disable_exclusive(const uint8_t pin);
+void __cs_enable_inclusive(const uint8_t pin);
+void __cs_disable_inclusive(const uint8_t pin);
+void __cs_clear();
+
+// use fallback technology.
+#define cs_enable_exclusive     __cs_enable_exclusive
+#define cs_disable_exclusive     __cs_enable_exclusive
+#define cs_enable_inclusive     __cs_enable_exclusive
+#define cs_disable_inclusive     __cs_enable_exclusive
 
 
 #endif // CHIPSELECT_H_INCLUDED

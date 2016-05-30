@@ -61,7 +61,7 @@ static void write(unsigned char c, unsigned char rs)
         output(c, rs);
 }
 
-void lcd_init()
+void lcd_sys_init()
 {
         SET_BIT(DDR, RS_PIN);
         SET_BIT(DDR, RW_PIN);

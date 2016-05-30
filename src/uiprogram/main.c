@@ -2,7 +2,7 @@
 
 int main()
 {
-        lcd_init();
+        lcd_sys_init();
 
         while(1) {
                 continue;

@@ -6,7 +6,7 @@
 /*
  * <lcd> public
  */
-void lcd_init();
+void lcd_sys_init();
 void lcd_clear();
 void lcd_pos(unsigned char r, unsigned char c);
 void lcd_putc(char c);

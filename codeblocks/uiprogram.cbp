@@ -23,8 +23,14 @@
 				<Option type="5" />
 				<Option compiler="avr-gcc" />
 				<Compiler>
-					<Add option="-Os" />
+					<Add option="-Ofast" />
+					<Add option="-flto" />
 				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-Ofast" />
+					<Add option="-flto" />
+				</Linker>
 			</Target>
 			<Environment>
 				<Variable name="MCU" value="atmega32" />

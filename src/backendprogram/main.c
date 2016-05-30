@@ -28,14 +28,20 @@ void test_gpio_flash_led()
                 avr_wait(500);
         }
 }
+
+void test_extsram_read_write()
+{
+}
 #endif // DEBUG
 
 
 int main()
 {
         spiioexp_sys_init();
+        extsram_sys_init();
 #ifdef DEBUG
-        test_gpio_flash_led();
+        // test_gpio_flash_led();
+        test_extsram_read_write();
 #endif // DEBUG
 
         while(1) {

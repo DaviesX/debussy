@@ -26,11 +26,12 @@
 				<Option compiler="avr-gcc" />
 				<Option createDefFile="1" />
 				<Compiler>
-					<Add option="-Os" />
 					<Add option="-Wall" />
+					<Add option="-Ofast" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-Ofast" />
 				</Linker>
 			</Target>
 		</Build>
