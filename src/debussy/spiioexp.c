@@ -136,6 +136,35 @@ void spiioexp_write_pins2(const struct spiioexp* self, const uint8_t data)
 }
 
 /*
+ * <spiioexp> test cases
+ */
+void spiioexp_test_blink_led()
+{
+        uint8_t led = 0, led2 = 0;
+        struct pin cs, cs2;
+        pin_init(&cs, PORTD, DDRD, 0);
+        pin_init(&cs2, PORTD, DDRD, 1);
+        struct spiioexp ioexp, ioexp2;
+        spiioexp_init_write_mode(&ioexp, &cs);
+        spiioexp_init_write_mode(&ioexp2, &cs2);
+
+        while (1) {
+                SET_BIT(led, 5);
+                spiioexp_write_pins(&ioexp, led);
+                CLR_BIT(led2, 5);
+                spiioexp_write_pins(&ioexp2, led2);
+
+                avr_wait(500);
+
+                CLR_BIT(led, 5);
+                spiioexp_write_pins(&ioexp, led);
+                SET_BIT(led2, 5);
+                spiioexp_write_pins(&ioexp2, led2);
+                avr_wait(500);
+        }
+}
+
+/*
  * <spiioexp2> public
  */
 // use logical chip select routine.

@@ -38,6 +38,7 @@
 		<Compiler>
 			<Add option="-mmcu=atmega32" />
 			<Add directory="../src/debussy" />
+			<Add directory="/usr/lib/avr/include" />
 		</Compiler>
 		<Linker>
 			<Add option="--lm" />

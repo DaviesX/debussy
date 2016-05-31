@@ -3,12 +3,23 @@
 
 #define F_CPU   16000000UL
 
-#include <stdint.h>
-#include <stdbool.h>
+// exclude incorrect definitions
+#define _INTTYPES_H
+#define _STDINT_H
 
-typedef int32_t int_farptr_t;
-typedef uint32_t uint_farptr_t;
-#define nullptr (void*) 0X0
+// use the correct definitions.
+typedef unsigned long   uint32_t;
+typedef unsigned int    uint16_t;
+typedef unsigned char   uint8_t;
+typedef signed long     int32_t;
+typedef signed int      int16_t;
+typedef signed char     int8_t;
+typedef unsigned char   bool;
+#define true            1
+#define false           0
+typedef int32_t         int_farptr_t;
+typedef uint32_t        uint_farptr_t;
+#define nullptr         (void*) 0X0
 struct pin {
         uint8_t* port;
         uint8_t* ddr;

@@ -29,6 +29,11 @@ uint8_t         spiioexp_read_pins2(const struct spiioexp* self);
 void            spiioexp_write_pins2(const struct spiioexp* self, const uint8_t data);
 
 /*
+ * <spiioexp> test cases
+ */
+void spiioexp_test_blink_led();
+
+/*
  * <spiioexp2> decl
  */
 struct spiioexp2 {
