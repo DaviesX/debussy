@@ -31,6 +31,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="`pkg-config gtk+-3.0 --cflags`" />
+			<Add directory="../src/debussyaerial" />
 		</Compiler>
 		<Linker>
 			<Add option="`pkg-config gtk+-3.0 --libs`" />
@@ -38,6 +39,15 @@
 		<Unit filename="../src/debussyaerial/aerial.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../src/debussyaerial/aerial.h" />
+		<Unit filename="../src/debussyaerial/usbtransfer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussyaerial/usbtransfer.h" />
+		<Unit filename="../src/debussyaerial/window.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussyaerial/window.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
