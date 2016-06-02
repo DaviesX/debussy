@@ -144,7 +144,7 @@ void extsram_test_read_write()
         uint16_t i;
         for (i = 0; i < sizeof(bytes); i ++) {
                 bytes[i] = rand()%255;
-                fetched[i] = magic_byte;
+                fetched[i] = 0;
         }
         struct extsram_addr addr;
         extsram_addr_init2(&addr, 0X0);
@@ -154,14 +154,6 @@ void extsram_test_read_write()
         extsram_write(&sram, &addr, bytes, sizeof(bytes));
         extsram_init_read_mode(&sram);
         extsram_read(&sram, &addr, fetched, sizeof(bytes));
-
-//        goto pass;
-//
-//        for (i = 0; i < sizeof(bytes); i ++) {
-//                if (fetched[i] != magic_byte)
-//                        goto pass;
-//        }
-//        goto failed;
 
         for (i = 0; i < sizeof(bytes); i ++) {
                 if (fetched[i] != bytes[i])
