@@ -40,10 +40,14 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussyaerial/aerial.h" />
-		<Unit filename="../src/debussyaerial/usbtransfer.c">
+		<Unit filename="../src/debussyaerial/console.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../src/debussyaerial/usbtransfer.h" />
+		<Unit filename="../src/debussyaerial/console.h" />
+		<Unit filename="../src/debussyaerial/usb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussyaerial/usb.h" />
 		<Unit filename="../src/debussyaerial/window.c">
 			<Option compilerVar="CC" />
 		</Unit>
