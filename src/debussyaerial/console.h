@@ -14,7 +14,7 @@ struct console {
 };
 
 /*
- * <console> public
+ * <stdconsole> decl
  */
 void console_init(struct console* self, f_Console_Log f_console_log, f_Console_Free f_free);
 void console_free(struct console* self);
@@ -23,7 +23,7 @@ void console_free(struct console* self);
         ((__self)->f_console_log(__self, __format, ##__VA_ARGS__))
 
 /*
- * <stdconsole> decl
+ * <stdconsole> public
  */
 struct stdconsole {
         struct console __parent;
