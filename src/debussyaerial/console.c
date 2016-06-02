@@ -25,10 +25,12 @@ void console_free(struct console* self)
 void stdconsole_init(struct stdconsole* self)
 {
         console_init(&self->__parent, (f_Console_Log) stdconsole_log, (f_Console_Free) stdconsole_free);
+        stdconsole_log(self, "-------------- debussy stdconsole initialized ---------------");
 }
 
 void stdconsole_free(struct stdconsole* self)
 {
+        stdconsole_log(self, "-------------- debussy stdconsole freed ---------------");
 }
 
 int stdconsole_log(struct stdconsole* self, const char* format, ...)
