@@ -155,7 +155,7 @@ void extsram_test_read_write()
         extsram_init_read_mode(&sram);
         extsram_read(&sram, &addr, fetched, sizeof(bytes));
 
-        for (i = 0; i < sizeof(bytes); i ++) {
+        for (i = 0; i < sizeof(bytes)m; i ++) {
                 if (fetched[i] != bytes[i])
                         goto failed;
         }
