@@ -244,7 +244,6 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="border_width">1</property>
-                <property name="relief">none</property>
                 <property name="use_underline">True</property>
                 <property name="xalign">0.50999999046325684</property>
                 <property name="yalign">0.50999999046325684</property>
@@ -293,6 +292,19 @@
               </object>
               <packing>
                 <property name="left_attach">3</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button5">
+                <property name="label" translatable="yes">Capture</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="border_width">1</property>
+              </object>
+              <packing>
+                <property name="left_attach">4</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
