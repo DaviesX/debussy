@@ -38,9 +38,9 @@ char* usbconn_format_as_string(struct usb_connection* self)
         int len = strlen(self->vender_id) +
                   strlen(self->name) +
                   strlen(self->manufacturer) +
-                  strlen(self->dev_node_path) + 20;
+                  strlen(self->dev_node_path) + 30;
         char* buf = malloc(len*sizeof(char));
-        sprintf(buf, "%s by %s (%s): %s",
+        sprintf(buf, "%s manufactured by %s (%s): %s",
                      self->name, self->manufacturer, self->vender_id, self->dev_node_path);
         return buf;
 }
@@ -140,7 +140,9 @@ struct usb_connection* usb_scan_connections(const struct usb* self, int* num_con
                 udev_device_unref(dev);
 
                 conns = realloc(conns, ++ n_devs*sizeof(*conns));
-                usbconn_init(&conns[n_devs - 1], vender_id, product_name, manufacturer, node_path);
+                const char combined_id[64];
+                sprintf(combined_id, "vid=%s pid=%s", vender_id, product_id);
+                usbconn_init(&conns[n_devs - 1], combined_id, product_name, manufacturer, node_path);
         }
         udev_enumerate_unref(enumerate);
         *num_conns = n_devs;
