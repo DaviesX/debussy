@@ -26,7 +26,7 @@ void console_init(struct console* self, f_Console_Log f_console_log, f_Console_F
 void console_free(struct console* self);
 
 #define console_log(__self, __log_level, __format, ...)         \
-        ((__self)->f_console_log(__self, (__log_level), __format, ##__VA_ARGS__))
+        ((__self) == nullptr ? -1 : (__self)->f_console_log(__self, (__log_level), __format, ##__VA_ARGS__))
 
 /*
  * <stdconsole> decl
