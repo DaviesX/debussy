@@ -1,3 +1,12 @@
+#include <linux/types.h>
+#include <linux/input.h>
+#include <linux/hidraw.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +31,7 @@ void usbconn_init(struct usb_connection* self,
         self->name              = name != nullptr ? strdup(name) : strdup("");
         self->manufacturer      = manufacturer != nullptr ? strdup(manufacturer) : strdup("");
         self->dev_node_path     = dev_node_path != nullptr ? strdup(dev_node_path) : strdup("");
+        self->fd                = -1;
 }
 
 void usbconn_free(struct usb_connection* self)
@@ -140,7 +150,7 @@ struct usb_connection* usb_scan_connections(const struct usb* self, int* num_con
                 udev_device_unref(dev);
 
                 conns = realloc(conns, ++ n_devs*sizeof(*conns));
-                const char combined_id[64];
+                char combined_id[64];
                 sprintf(combined_id, "vid=%s pid=%s", vender_id, product_id);
                 usbconn_init(&conns[n_devs - 1], combined_id, product_name, manufacturer, node_path);
         }
@@ -151,7 +161,20 @@ struct usb_connection* usb_scan_connections(const struct usb* self, int* num_con
 
 bool usb_connect_to(struct usb* self, struct usb_connection* conn, struct console* console)
 {
-        return false;
+        // Close old file descriptor.
+        if (conn->fd >= 0)
+                close(conn->fd);
+        // Open new device.
+        char* conn_str = usbconn_format_as_string(conn);
+        if (0 > (conn->fd = open(conn->dev_node_path, O_RDWR | O_NONBLOCK))) {
+                console_log(console, ConsoleLogSevere, "Failed to open device %s", conn_str), free(conn_str);
+                console_log(console, ConsoleLogSevere, "Cause: %s", strerror(errno));
+                return false;
+        } else {
+                console_log(console, ConsoleLogSevere, "Successfully opened device %s", conn_str), free(conn_str);
+                self->conn = *conn;
+                return true;
+        }
 }
 
 char* usb_fetch_console_string(const struct usb* self, size_t* num_bytes)

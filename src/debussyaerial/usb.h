@@ -12,6 +12,7 @@ struct usb_connection {
         char*           name;
         char*           manufacturer;
         char*           dev_node_path;
+        int             fd;
 };
 
 /*
