@@ -5,10 +5,10 @@
 #define WHOLE_NOTE      16
 #define FREQ_A4         440
 
-static float note_player_get_freq(struct note_player* self, uint8_t semi)
-{
-        return self->freq[semi];
-}
+//static float note_player_get_freq(struct note_player* self, uint8_t semi)
+//{
+//        return self->freq[semi];
+//}
 
 void note_player_init(struct note_player* self)
 {

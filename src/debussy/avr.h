@@ -36,6 +36,7 @@ struct pin {
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include <avr/io.h>
+#include <avr/wdt.h>
 
 #define XTAL_FRQ F_CPU
 

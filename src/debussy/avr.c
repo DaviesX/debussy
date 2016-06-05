@@ -3,7 +3,7 @@
 
 void avr_init()
 {
-//        WDTCR = 15;
+        wdt_enable(WDTO_2S);
 }
 
 void avr_wait(uint16_t milisec)
@@ -14,7 +14,8 @@ void avr_wait(uint16_t milisec)
         while (milisec --) {
                 TCNT0 = (unsigned char)(256 - (XTAL_FRQ / 64) * 0.001);
                 SET_BIT(TIFR, TOV0);
-                while (!GET_BIT(TIFR, TOV0));
+                while (!GET_BIT(TIFR, TOV0))
+                        wdt_reset();
         }
         TCCR0 = 0;
 }
@@ -27,7 +28,8 @@ void avr_wait2(uint16_t milisec, uint16_t (*callback) (), void* data)
         while (milisec -- > 0) {
                 TCNT0 = (unsigned char)(256 - (XTAL_FRQ / 64) * 0.001);
                 SET_BIT(TIFR, TOV0);
-                while (!GET_BIT(TIFR, TOV0));
+                while (!GET_BIT(TIFR, TOV0))
+                        wdt_reset();
                 uint16_t cost = callback(data);
                 if (cost > milisec) break;
                 else milisec -= cost;
@@ -42,7 +44,8 @@ void avr_wait_micro(uint16_t microsec)
         while (microsec --) {
                 TCNT0 = (unsigned char)(256 - (XTAL_FRQ / 8) * 0.000001);
                 SET_BIT(TIFR, TOV0);
-                while (!GET_BIT(TIFR, TOV0));
+                while (!GET_BIT(TIFR, TOV0))
+                        wdt_reset();
         }
         TCCR0 = 0;
 }
@@ -51,7 +54,7 @@ void avr_nop(uint16_t ms)
 {
        volatile unsigned long i, n = (F_CPU/46000)*ms;
        for (i = 0; i < n; i ++) {
-                continue;
+                wdt_reset();
        }
 }
 

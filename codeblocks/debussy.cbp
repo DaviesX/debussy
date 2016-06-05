@@ -111,6 +111,13 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/spiioexp.h" />
+		<Unit filename="../src/debussy/usbdrv/oddebug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/usbdrv/usbdrv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/usbdrv/usbdrvasm.S" />
 		<Extensions>
 			<code_completion />
 			<envvars />

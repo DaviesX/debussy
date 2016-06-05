@@ -62,41 +62,41 @@ void extstram_free(struct extsram* self)
         DATA_DDR = 0X00;
 }
 
-//#define __extsram_serial_read_write_fast(__self, __addr, __data, __length, __iodir)     \
-//{                                                                                       \
-//        ADDR0_7_PORT = (__addr)->addr0_7;                                               \
-//        ADDR8_15_PORT = (__addr)->addr8_15;                                             \
-//        ADDR16_18_PORT = (__addr)->addr16_18 & 0b00000111;                              \
-//                                                                                        \
-//                                                                                        \
-//        uint16_t i = 0;                                                                 \
-//        while ((__length) > 0) {                                                        \
-//                /* save clock manipulation cycles. */                                   \
-//                uint16_t end = ADDR0_7_PORT + (__length);                               \
-//                const uint8_t end_addr0_7 = end > 255 ? 255 : end;                      \
-//                (__length) -= end_addr0_7 - ADDR0_7_PORT + 1;                           \
-//                                                                                        \
-//                for ( ; ADDR0_7_PORT < end_addr0_7; ) {                                 \
-//                        if (__iodir == 0) DATA_PORT = (__data)[i];                      \
-//                        else              (__data)[i] = DATA_PORT;                      \
-//                        ADDR0_7_PORT ++;                                                \
-//                        i ++;                                                           \
-//                }                                                                       \
-//                                                                                        \
-//                /* last increment. */                                                   \
-//                if (__iodir == 0) DATA_PORT = (__data)[i];                              \
-//                else              (__data)[i] = DATA_PORT;                              \
-//                                                                                        \
-//                uint32_t address = ((ADDR0_7_PORT | ((uint16_t) ADDR8_15_PORT << 8)) |  \
-//                                    ((uint32_t) ADDR16_18_DDR << 16)) + 1;              \
-//                ADDR16_18_DDR = address >> 16;                                          \
-//                ADDR8_15_PORT = (uint8_t) (address >> 8);                               \
-//                ADDR0_7_PORT = (uint8_t) address;                                       \
-//                                                                                        \
-//                i ++;                                                                   \
-//        }                                                                               \
-//}
-//
+#define __extsram_serial_read_write_fast(__self, __addr, __data, __length, __iodir)     \
+{                                                                                       \
+        ADDR0_7_PORT = (__addr)->addr0_7;                                               \
+        ADDR8_15_PORT = (__addr)->addr8_15;                                             \
+        ADDR16_18_PORT = (__addr)->addr16_18 & 0b00000111;                              \
+                                                                                        \
+                                                                                        \
+        uint16_t i = 0;                                                                 \
+        while ((__length) > 0) {                                                        \
+                /* save clock manipulation cycles. */                                   \
+                uint16_t end = ADDR0_7_PORT + (__length);                               \
+                const uint8_t end_addr0_7 = end > 255 ? 255 : end;                      \
+                (__length) -= end_addr0_7 - ADDR0_7_PORT + 1;                           \
+                                                                                        \
+                for ( ; ADDR0_7_PORT < end_addr0_7; ) {                                 \
+                        if (__iodir == 0) DATA_PORT = (__data)[i];                      \
+                        else              (__data)[i] = DATA_PORT;                      \
+                        ADDR0_7_PORT ++;                                                \
+                        i ++;                                                           \
+                }                                                                       \
+                                                                                        \
+                /* last increment. */                                                   \
+                if (__iodir == 0) DATA_PORT = (__data)[i];                              \
+                else              (__data)[i] = DATA_PORT;                              \
+                                                                                        \
+                uint32_t address = ((ADDR0_7_PORT | ((uint16_t) ADDR8_15_PORT << 8)) |  \
+                                    ((uint32_t) ADDR16_18_DDR << 16)) + 1;              \
+                ADDR16_18_DDR = address >> 16;                                          \
+                ADDR8_15_PORT = (uint8_t) (address >> 8);                               \
+                ADDR0_7_PORT = (uint8_t) address;                                       \
+                                                                                        \
+                i ++;                                                                   \
+        }                                                                               \
+}
+
 #define __extsram_serial_read_write(__self, __addr, __data, __length, __iodir)          \
 {                                                                                       \
         ADDR0_7_PORT = (__addr)->addr0_7;                                               \
@@ -139,8 +139,8 @@ void extsram_read(const struct extsram* self,
  */
 void extsram_test_read_write()
 {
-        volatile uint8_t bytes[512], fetched[512];
-        const uint8_t magic_byte = 0XE5;
+        uint8_t bytes[512], fetched[512];
+//        const uint8_t magic_byte = 0XE5;
         uint16_t i;
         for (i = 0; i < sizeof(bytes); i ++) {
                 bytes[i] = rand()%255;
@@ -155,7 +155,7 @@ void extsram_test_read_write()
         extsram_init_read_mode(&sram);
         extsram_read(&sram, &addr, fetched, sizeof(bytes));
 
-        for (i = 0; i < sizeof(bytes)m; i ++) {
+        for (i = 0; i < sizeof(bytes); i ++) {
                 if (fetched[i] != bytes[i])
                         goto failed;
         }
