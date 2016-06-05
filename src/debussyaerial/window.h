@@ -8,15 +8,17 @@
  */
 typedef struct _GtkWidget GtkWidget;
 typedef struct _GtkStatusbar GtkStatusbar;
+struct window_impl;
 struct window {
-        GtkWidget*      win_widget;
-        char*           title;
-        int             w;
-        int             h;
-        int*            argc;
-        char***         argv;
-        GtkStatusbar*   status_bar;
-        struct console* console;
+        GtkWidget*              win_widget;
+        char*                   title;
+        int                     w;
+        int                     h;
+        int*                    argc;
+        char***                 argv;
+        GtkStatusbar*           status_bar;
+        struct console*         console;
+        struct window_impl*     pimpl;
 };
 
 /*
