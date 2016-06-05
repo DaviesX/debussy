@@ -7,10 +7,11 @@
  * <window> decl
  */
 typedef struct _GtkWidget GtkWidget;
+typedef struct _GtkWindow GtkWindow;
 typedef struct _GtkStatusbar GtkStatusbar;
 struct window_impl;
 struct window {
-        GtkWidget*              win_widget;
+        GtkWindow*              win_widget;
         char*                   title;
         int                     w;
         int                     h;
