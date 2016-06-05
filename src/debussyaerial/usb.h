@@ -24,6 +24,7 @@ void                    usbconn_init(struct usb_connection* self,
                                      const char* dev_node_path);
 void                    usbconn_free(struct usb_connection* self);
 struct usb_connection*  usbconns_find_by_vender_id(struct usb_connection* conns, int n_conns, const char* id);
+char**                  usbconns_format_as_strings(struct usb_connection* conns, int n_conns);
 
 
 /*

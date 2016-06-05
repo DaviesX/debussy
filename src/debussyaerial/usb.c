@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -41,6 +42,23 @@ struct usb_connection* usbconns_find_by_vender_id(struct usb_connection* conns, 
                 }
         }
         return nullptr;
+}
+
+char** usbconns_format_as_strings(struct usb_connection* conns, int n_conns)
+{
+        char** strings = malloc(sizeof(char*)*n_conns);
+        int i;
+        for (i = 0; i < n_conns; i ++) {
+                struct usb_connection* conn = &conns[i];
+                int len = strlen(conn->vender_id) +
+                          strlen(conn->name) +
+                          strlen(conn->manufacturer) +
+                          strlen(conn->dev_node_path) + 20;
+                strings[i] = malloc(len*sizeof(char));
+                sprintf(strings[i], "%s by %s(%s): %s",
+                                    conn->name, conn->manufacturer, conn->vender_id, conn->dev_node_path);
+        }
+        return strings;
 }
 
 /*
@@ -110,6 +128,7 @@ struct usb_connection* usb_scan_connections(const struct usb* self, int* num_con
                 usbconn_init(&conns[n_devs - 1], vender_id, product_name, manufacturer, node_path);
         }
         udev_enumerate_unref(enumerate);
+        *num_conns = n_devs;
         return conns;
 }
 
