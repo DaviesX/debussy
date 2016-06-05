@@ -33,6 +33,18 @@ void usbconn_free(struct usb_connection* self)
         memset(self, 0, sizeof(*self));
 }
 
+char* usbconn_format_as_string(struct usb_connection* self)
+{
+        int len = strlen(self->vender_id) +
+                  strlen(self->name) +
+                  strlen(self->manufacturer) +
+                  strlen(self->dev_node_path) + 20;
+        char* buf = malloc(len*sizeof(char));
+        sprintf(buf, "%s by %s (%s): %s",
+                     self->name, self->manufacturer, self->vender_id, self->dev_node_path);
+        return buf;
+}
+
 struct usb_connection* usbconns_find_by_vender_id(struct usb_connection* conns, int n_conns, const char* id)
 {
         int i;
@@ -50,15 +62,18 @@ char** usbconns_format_as_strings(struct usb_connection* conns, int n_conns)
         int i;
         for (i = 0; i < n_conns; i ++) {
                 struct usb_connection* conn = &conns[i];
-                int len = strlen(conn->vender_id) +
-                          strlen(conn->name) +
-                          strlen(conn->manufacturer) +
-                          strlen(conn->dev_node_path) + 20;
-                strings[i] = malloc(len*sizeof(char));
-                sprintf(strings[i], "%s by %s(%s): %s",
-                                    conn->name, conn->manufacturer, conn->vender_id, conn->dev_node_path);
+                strings[i] = usbconn_format_as_string(conn);
         }
         return strings;
+}
+
+void usbconns_free_strings(char** strings, int n_conns)
+{
+        int i;
+        for (i = 0; i < n_conns; i ++) {
+                free(strings[i]);
+        }
+        free(strings);
 }
 
 /*
@@ -132,7 +147,7 @@ struct usb_connection* usb_scan_connections(const struct usb* self, int* num_con
         return conns;
 }
 
-bool usb_connect_to(struct usb* self, struct usb_connection* conn)
+bool usb_connect_to(struct usb* self, struct usb_connection* conn, struct console* console)
 {
         return false;
 }
