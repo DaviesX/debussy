@@ -93,6 +93,7 @@ void usb_init(struct usb* self)
 {
         memset(self, 0, sizeof(*self));
         self->udev_ctx = udev_new();
+        self->is_connected = false;
 }
 
 void usb_free(struct usb* self)
@@ -159,6 +160,11 @@ struct usb_connection* usb_scan_connections(const struct usb* self, int* num_con
         return conns;
 }
 
+bool usb_is_connected(struct usb* self)
+{
+        return self->is_connected;
+}
+
 bool usb_connect_to(struct usb* self, struct usb_connection* conn, struct console* console)
 {
         // Close old file descriptor.
@@ -169,15 +175,30 @@ bool usb_connect_to(struct usb* self, struct usb_connection* conn, struct consol
         if (0 > (conn->fd = open(conn->dev_node_path, O_RDWR | O_NONBLOCK))) {
                 console_log(console, ConsoleLogSevere, "Failed to open device %s", conn_str), free(conn_str);
                 console_log(console, ConsoleLogSevere, "Cause: %s", strerror(errno));
+                self->is_connected = false;
                 return false;
         } else {
                 console_log(console, ConsoleLogSevere, "Successfully opened device %s", conn_str), free(conn_str);
                 self->conn = *conn;
+                self->is_connected = true;
                 return true;
         }
 }
 
 char* usb_fetch_console_string(const struct usb* self, size_t* num_bytes)
 {
-        return nullptr;
+        if (!self->is_connected)
+                return nullptr;
+
+        char* msg = nullptr;
+        char buf[BUFSIZ];
+        int n_fetched, n_total = 0;
+
+        while (0 < (n_fetched = read(self->conn.fd, buf, sizeof(buf)))) {
+                msg = realloc(msg, n_total += n_fetched);
+                memcpy(&msg[n_total - n_fetched], buf, sizeof(n_fetched));
+        }
+
+        *num_bytes = n_total;
+        return msg;
 }
