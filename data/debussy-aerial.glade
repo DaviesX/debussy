@@ -317,7 +317,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button5">
+              <object class="GtkButton" id="bt-capture">
                 <property name="label" translatable="yes">Capture</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
