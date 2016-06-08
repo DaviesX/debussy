@@ -11,7 +11,7 @@
 #define USB_D_PLUS  PD2
 #define USB_D_MINUS PD4
 
-#define REPORT_BYTE_COUNT       32
+#define REPORT_BYTE_COUNT       64
 #define REPORT_BUFFER_SIZE      (REPORT_BYTE_COUNT - 2)
 
 enum RequestType {
@@ -19,13 +19,15 @@ enum RequestType {
 };
 
 struct request {
+        uint8_t report_id;
+        char    buf[REPORT_BUFFER_SIZE];
         uint8_t type;
         uint8_t len;
-        char    buf[REPORT_BUFFER_SIZE];
 };
 
 static void __hidusb_request_init(struct request* self, uint8_t type, uint8_t len)
 {
+        self->report_id = 0x01;
         self->type = type;
         self->len = len;
 }
@@ -141,7 +143,7 @@ void hidusb_free(struct hidusb* self)
 
 void __hidusb_send_request(struct request* request)
 {
-        uint8_t total = request->len;
+        uint8_t total = sizeof(struct request);
         uint8_t consumed = 0;
         uint8_t* request_buf = (uint8_t*) &g_request;
 
@@ -149,8 +151,8 @@ void __hidusb_send_request(struct request* request)
                 wdt_reset();
                 hidusb_tick();
                 if(usbInterruptIsReady()) {
-                        usbSetInterrupt(&request_buf[consumed], 8);
-                        consumed += 8;
+                        usbSetInterrupt(&request_buf[consumed], 1);
+                        consumed += 1;
                 }
         }
 }
@@ -171,8 +173,13 @@ void hidusb_tick()
  */
 void hidusb_print_test()
 {
+        hidusb_puts(nullptr, "hello world");
+        hidusb_puts(nullptr, "hello world");
+        hidusb_puts(nullptr, "hello world");
+        hidusb_puts(nullptr, "hello world");
+        hidusb_puts(nullptr, "hello world");
+        hidusb_puts(nullptr, "hello world");
         while(1) {
-                hidusb_puts(nullptr, "hello world");
                 hidusb_tick();
                 wdt_reset();
         }
