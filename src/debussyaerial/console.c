@@ -78,7 +78,7 @@ void gtkconsole_init(struct gtkconsole* self, GtkTextView* target_widget)
         self->text_buffer = gtk_text_view_get_buffer(self->text_view);
         assert(self->text_buffer != nullptr);
 
-        gtk_text_view_set_editable(self->text_view, false);
+        gtk_text_view_set_editable(self->text_view, true);
         self->stdconsole = (struct stdconsole*) stdconsole_create();
 
         gtkconsole_log(self, ConsoleLogNormal,
