@@ -23,8 +23,9 @@
 				<Option type="5" />
 				<Option compiler="avr-gcc" />
 				<Compiler>
-					<Add option="-Ofast" />
+					<Add option="-Os" />
 					<Add option="-flto" />
+					<Add option="-Ofast" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />

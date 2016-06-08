@@ -161,6 +161,15 @@ static gboolean __window_impl_fetch_device_console(gpointer user_data)
         return TRUE;
 }
 
+static gboolean __window_impl_capture_device(GtkButton* button, gpointer user_data)
+{
+        struct window_impl* self = (struct window_impl*) user_data;
+        size_t n_bytes;
+        char* msg = usb_capture(&self->usb, &n_bytes);
+        if (msg != nullptr)
+                console_log(self->public_ref->console, ConsoleLogNormal, "device: %s", msg), free(msg);
+        return TRUE;
+}
 
 /*
  * <window> public
@@ -291,6 +300,15 @@ void window_run(struct window* self)
                                          G_CALLBACK(__window_impl_on_help_about), self->pimpl);
                 }
 
+                // Load buttons and connect signals.
+                GtkButton* bt_capture = (GtkButton*) gtk_builder_get_object(builder, "bt-capture");
+                if (bt_capture == nullptr) {
+                        console_log(self->console, ConsoleLogSevere, "Cannot load device capture button.");
+                } else {
+                        g_signal_connect(G_OBJECT(bt_capture), "clicked",
+                                         G_CALLBACK(__window_impl_capture_device), self->pimpl);
+                }
+
                 // Load impl UIs and connect signals.
                 GtkDialog* dl_helpabout = (GtkDialog*) gtk_builder_get_object(builder, "dl-helpabout");
                 GtkDialog* dl_conn = (GtkDialog*) gtk_builder_get_object(builder, "dl-connection");
@@ -308,7 +326,7 @@ void window_run(struct window* self)
                                              bt_conn_confirm,
                                              bt_conn_cancel);
                 }
-                g_timeout_add(2000, __window_impl_fetch_device_console, self->pimpl);
+                g_timeout_add(100, __window_impl_fetch_device_console, self->pimpl);
                 g_object_unref(builder);
         }
 

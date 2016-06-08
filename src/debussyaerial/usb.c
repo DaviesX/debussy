@@ -185,8 +185,8 @@ bool usb_connect_to(struct usb* self, struct usb_connection* conn, struct consol
         }
 }
 
-#define REPORT_BYTE_COUNT       65
-#define REPORT_BUFFER_SIZE      (REPORT_BYTE_COUNT - 3)
+#define REPORT_BYTE_COUNT       64
+#define REPORT_BUFFER_SIZE      (REPORT_BYTE_COUNT - 2)
 
 struct request {
         uint8_t report_id;
@@ -200,20 +200,38 @@ char* usb_fetch_console_string(const struct usb* self, size_t* num_bytes)
         if (!self->is_connected)
                 return nullptr;
 
-        int n_fetched, n_total = 0;
-        struct request req_buf;
-        char* buf = &req_buf;
+        int n_fetched, n_consumed = 0;
+        struct request req_buf = {0};
+        uint8_t* buf = (uint8_t*) &req_buf;
+        bool is_valid = false;
 
-        while (n_total < REPORT_BYTE_COUNT &&
-               0 < (n_fetched = read(self->conn.fd, &buf[n_total], sizeof(buf)))) {
-                n_total += n_fetched;
-        }
+        // Get a full packet before exiting.
+        do {
+                n_fetched = read(self->conn.fd, &buf[n_consumed], sizeof(req_buf) - n_consumed);
+                if (n_fetched > 0 && req_buf.report_id == 0x1) {
+                        is_valid = true;
+                        n_consumed += n_fetched;
+                }
+        } while (is_valid && n_consumed < REPORT_BYTE_COUNT);
 
-        if (n_total > 0) {
+        if (n_consumed > 0) {
                 *num_bytes = req_buf.len;
                 return strdup(req_buf.buf);
         } else {
                 *num_bytes = 0;
                 return nullptr;
         }
+}
+
+char* usb_capture(const struct usb* self, size_t* num_bytes)
+{
+        if (!self->is_connected)
+                return nullptr;
+        struct request req_buf;
+        req_buf.report_id = 0x2;
+        req_buf.len = 2;
+        req_buf.type = 1;
+        if (0 > write(self->conn.fd, &req_buf, sizeof(req_buf)))
+                return nullptr;
+        return usb_fetch_console_string(self, num_bytes);
 }
