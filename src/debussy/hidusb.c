@@ -20,9 +20,9 @@ enum RequestType {
 
 struct request {
         uint8_t report_id;
-        char    buf[REPORT_BUFFER_SIZE];
         uint8_t type;
         uint8_t len;
+        char    buf[REPORT_BUFFER_SIZE];
 };
 
 static void __hidusb_request_init(struct request* self, uint8_t type, uint8_t len)
@@ -51,11 +51,11 @@ PROGMEM const char usbHidReportDescriptor[] = {    /* USB report descriptor */
         0x75, 0x08,                     //   (GLOBAL) REPORT_SIZE        0x08 (8) Number of bits per field
         0x85, 0x01,                     //   (GLOBAL) REPORT_ID          0x01 (1)
         0x95, REPORT_BYTE_COUNT,        //   (GLOBAL) REPORT_COUNT       Number of fields
-        0x09, 0x00,                     //   (LOCAL)  USAGE              0xFF000000
-        0x81, 0x02,                     //   (MAIN)   INPUT              0x00000002 (64 fields x 8 bits) 0=Data 1=Variable 0=Absolute 0=NoWrap 0=Linear 0=PrefState 0=NoNull 0=NonVolatile 0=Bitmap
+        0x09, 0x01,                     //   (LOCAL)  USAGE              0xFF000001
+        0x81, 0x82,                     //   (MAIN)   INPUT              0x00000002 (64 fields x 8 bits) 0=Data 1=Variable 0=Absolute 0=NoWrap 0=Linear 0=PrefState 0=NoNull 0=NonVolatile 0=Bitmap
         0x85, 0x02,                     //   (GLOBAL) REPORT_ID          0x02 (2)
-        0x09, 0x00,                     //   (LOCAL)  USAGE              0xFF000000
-        0x91, 0x02,                     //   (MAIN)   OUTPUT             0x00000002 (64 fields x 8 bits) 0=Data 1=Variable 0=Absolute 0=NoWrap 0=Linear 0=PrefState 0=NoNull 0=NonVolatile 0=Bitmap
+        0x09, 0x01,                     //   (LOCAL)  USAGE              0xFF000001
+        0x91, 0x82,                     //   (MAIN)   OUTPUT             0x00000002 (64 fields x 8 bits) 0=Data 1=Variable 0=Absolute 0=NoWrap 0=Linear 0=PrefState 0=NoNull 0=NonVolatile 0=Bitmap
         0xC0,                           // (MAIN)   END_COLLECTION     Application
 };
 
@@ -108,9 +108,16 @@ uint8_t usbFunctionWrite(uint8_t *data, uint8_t len)
 
 usbMsgLen_t usbFunctionSetup(uint8_t data[8])
 {
+        SET_BIT(DDRD, PD7);
+        if (GET_BIT(PORTD, PD7)) {
+                CLR_BIT(PORTD, PD7);
+        } else {
+                SET_BIT(PORTD, PD7);
+        }
+
         g_consumed = 0;
         g_num_bytes = REPORT_BUFFER_SIZE;
-        return 0;
+        return USB_NO_MSG;
 }
 
 /*
@@ -147,18 +154,24 @@ void __hidusb_send_request(struct request* request)
         uint8_t consumed = 0;
         uint8_t* request_buf = (uint8_t*) &g_request;
 
-        for ( ; consumed != total; ) {
+        for ( ; consumed < total; ) {
                 wdt_reset();
                 hidusb_tick();
                 if(usbInterruptIsReady()) {
-                        usbSetInterrupt(&request_buf[consumed], 1);
-                        consumed += 1;
+                        uint8_t rest = total - consumed;
+                        uint8_t len = rest > 8 ? 8 : rest;
+                        usbSetInterrupt(&request_buf[consumed], len);
+                        consumed += len;
                 }
         }
+        // Make sure the message is terminated.
+        while (usbInterruptIsReady())
+                usbSetInterrupt(&request_buf[consumed], 0);
 }
 
-void hidusb_puts(struct hidusb* self, const char* s)
+void hidusb_puts(const char* s)
 {
+        if (!g_dev_enabled) return;
         __hidusb_print_request_init(&g_request, s);
         __hidusb_send_request(&g_request);
 }
@@ -173,13 +186,8 @@ void hidusb_tick()
  */
 void hidusb_print_test()
 {
-        hidusb_puts(nullptr, "hello world");
-        hidusb_puts(nullptr, "hello world");
-        hidusb_puts(nullptr, "hello world");
-        hidusb_puts(nullptr, "hello world");
-        hidusb_puts(nullptr, "hello world");
-        hidusb_puts(nullptr, "hello world");
         while(1) {
+                hidusb_puts("hello world");
                 hidusb_tick();
                 wdt_reset();
         }
