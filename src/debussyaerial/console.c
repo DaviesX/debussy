@@ -107,6 +107,7 @@ int gtkconsole_log(const struct gtkconsole* self, const int log_level, const cha
         gtk_text_buffer_get_end_iter(self->text_buffer, &iter);
         gtk_text_buffer_insert(self->text_buffer, &iter, buf, strlen(buf));
         gtk_text_buffer_insert(self->text_buffer, &iter, "\n", strlen("\n"));
+        gtk_text_view_scroll_to_iter(self->text_view, &iter, 0, true, 0, 0);
 
         stdconsole_log(self->stdconsole, log_level, "%s", buf);
 

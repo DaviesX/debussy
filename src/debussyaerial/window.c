@@ -308,7 +308,7 @@ void window_run(struct window* self)
                                              bt_conn_confirm,
                                              bt_conn_cancel);
                 }
-                g_timeout_add(100, __window_impl_fetch_device_console, self->pimpl);
+                g_timeout_add(2000, __window_impl_fetch_device_console, self->pimpl);
                 g_object_unref(builder);
         }
 

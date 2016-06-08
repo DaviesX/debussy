@@ -185,20 +185,35 @@ bool usb_connect_to(struct usb* self, struct usb_connection* conn, struct consol
         }
 }
 
+#define REPORT_BYTE_COUNT       65
+#define REPORT_BUFFER_SIZE      (REPORT_BYTE_COUNT - 3)
+
+struct request {
+        uint8_t report_id;
+        uint8_t type;
+        uint8_t len;
+        char    buf[REPORT_BUFFER_SIZE];
+};
+
 char* usb_fetch_console_string(const struct usb* self, size_t* num_bytes)
 {
         if (!self->is_connected)
                 return nullptr;
 
-        char* msg = nullptr;
-        char buf[BUFSIZ];
         int n_fetched, n_total = 0;
+        struct request req_buf;
+        char* buf = &req_buf;
 
-        while (0 < (n_fetched = read(self->conn.fd, buf, sizeof(buf)))) {
-                msg = realloc(msg, n_total += n_fetched);
-                memcpy(&msg[n_total - n_fetched], buf, sizeof(n_fetched));
+        while (n_total < REPORT_BYTE_COUNT &&
+               0 < (n_fetched = read(self->conn.fd, &buf[n_total], sizeof(buf)))) {
+                n_total += n_fetched;
         }
 
-        *num_bytes = n_total;
-        return msg;
+        if (n_total > 0) {
+                *num_bytes = req_buf.len;
+                return strdup(req_buf.buf);
+        } else {
+                *num_bytes = 0;
+                return nullptr;
+        }
 }
