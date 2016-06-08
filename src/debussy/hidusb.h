@@ -1,6 +1,9 @@
 #ifndef HIDUSB_H_INCLUDED
 #define HIDUSB_H_INCLUDED
 
+#include <avr.h>
+
+
 /*
  * <hidusb> decl
  */
