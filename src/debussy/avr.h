@@ -33,6 +33,7 @@ struct pin {
 }
 
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include <avr/io.h>

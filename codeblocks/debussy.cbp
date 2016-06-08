@@ -103,6 +103,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/noteplayer.h" />
+		<Unit filename="../src/debussy/scheduler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/scheduler.h" />
 		<Unit filename="../src/debussy/speaker.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -22,6 +22,7 @@
  */
 void extsram_sys_init()
 {
+        return ;
 }
 
 void extsram_init_read_mode(struct extsram* self)

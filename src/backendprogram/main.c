@@ -2,11 +2,18 @@
 #include <spiioexp.h>
 #include <extsram.h>
 #include <hidusb.h>
+#include <scheduler.h>
+
+
+static bool __idle(void* user_data)
+{
+        return true;
+}
 
 int main()
 {
         avr_init();
-        hidusb_sys_init();
+        hidusb_sys_init(true);
         spiioexp_sys_init();
         extsram_sys_init();
 #ifdef DEBUG
@@ -15,9 +22,6 @@ int main()
         hidusb_print_test();
 #endif // DEBUG
 
-        while(1) {
-                wdt_reset();
-                continue;
-        }
+        schd_run(__idle, nullptr);
         return 0;
 }

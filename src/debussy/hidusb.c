@@ -37,8 +37,14 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 /*
  * <hidusb> public
  */
-void hidusb_sys_init()
+static bool g_dev_enabled;
+
+void hidusb_sys_init(bool dev_enable)
 {
+        g_dev_enabled = dev_enable;
+        if (!dev_enable)
+                return;
+
         cli();
         USB_DDR = 0;
         USB_PORT = 0;
@@ -61,6 +67,11 @@ void hidusb_puts(struct hidusb* self, const char* s)
 {
 }
 
+void hidusb_tick()
+{
+        usbPoll();
+}
+
 /*
  * <hidusb> test cases
  */
@@ -68,6 +79,6 @@ void hidusb_print_test()
 {
         while(1) {
                 wdt_reset();
-                usbPoll();
+                hidusb_tick();
         }
 }
