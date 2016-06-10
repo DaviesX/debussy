@@ -2,14 +2,14 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="backendprogram" />
+		<Option title="hostconnprogram" />
 		<Option pch_mode="2" />
 		<Option compiler="avr-gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="../build/backendprogram.elf" prefix_auto="1" extension_auto="0" />
+				<Option output="../build/hostconnprogram.elf" prefix_auto="1" extension_auto="0" />
 				<Option working_dir="" />
-				<Option object_output="../build/backendprogram" />
+				<Option object_output="../build/hostconnprogram" />
 				<Option type="5" />
 				<Option compiler="avr-gcc" />
 				<Compiler>
@@ -17,9 +17,9 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="../build/backendprogram.elf" prefix_auto="1" extension_auto="0" />
+				<Option output="../build/hostconnprogram.elf" prefix_auto="1" extension_auto="0" />
 				<Option working_dir="" />
-				<Option object_output="../build/backendprogram" />
+				<Option object_output="../build/hostconnprogram" />
 				<Option type="5" />
 				<Option compiler="avr-gcc" />
 				<Compiler>
@@ -28,9 +28,8 @@
 					<Add option="-Ofast" />
 				</Compiler>
 				<Linker>
-					<Add option="-s" />
-					<Add option="-Ofast" />
 					<Add option="-flto" />
+					<Add option="-Ofast" />
 				</Linker>
 			</Target>
 			<Environment>
@@ -38,21 +37,20 @@
 			</Environment>
 		</Build>
 		<Compiler>
+			<Add option="-mmcu=atmega32" />
 			<Add option="-Wall" />
-			<Add option="-mmcu=atmega1284p" />
 			<Add option="-DF_CPU=16000000UL" />
-			<Add option="-DDEBUG" />
 			<Add directory="../src/debussy" />
 		</Compiler>
 		<Linker>
-			<Add option="-mmcu=atmega1284p" />
+			<Add option="-mmcu=atmega32" />
 			<Add library="../build/libdebussy.a" />
 		</Linker>
 		<ExtraCommands>
 			<Add after="avr-size $(TARGET_OUTPUT_FILE)" />
 			<Add after="avr-objcopy -R .eeprom -R .fuse -R .lock -R .signature -O ihex $(TARGET_OUTPUT_FILE) $(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).hex" />
 		</ExtraCommands>
-		<Unit filename="../src/backendprogram/main.c">
+		<Unit filename="../src/hostconnprogram/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions>

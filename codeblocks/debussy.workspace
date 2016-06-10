@@ -9,5 +9,8 @@
 			<Depends filename="debussy.cbp" />
 		</Project>
 		<Project filename="debussyaerial.cbp" />
+		<Project filename="hostconnprogram.cbp">
+			<Depends filename="debussy.cbp" />
+		</Project>
 	</Workspace>
 </CodeBlocks_workspace_file>
