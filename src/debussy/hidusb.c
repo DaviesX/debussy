@@ -108,13 +108,6 @@ uint8_t usbFunctionWrite(uint8_t *data, uint8_t len)
 
 usbMsgLen_t usbFunctionSetup(uint8_t data[8])
 {
-        SET_BIT(DDRD, PD7);
-        if (GET_BIT(PORTD, PD7)) {
-                CLR_BIT(PORTD, PD7);
-        } else {
-                SET_BIT(PORTD, PD7);
-        }
-
         g_consumed = 0;
         g_num_bytes = REPORT_BUFFER_SIZE;
         return USB_NO_MSG;

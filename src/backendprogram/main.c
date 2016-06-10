@@ -14,12 +14,10 @@ int main()
 {
         avr_init();
         hidusb_sys_init(true);
-        hidusb_puts("AVR has been initialized...");
-        hidusb_puts("HIDUSB device has been initialized...");
+        SET_BIT(DDRD, PD7);
+        SET_BIT(PORTD, PD7);
         spiioexp_sys_init();
-        hidusb_puts("SPI GPIO Expander has been initialized...");
         extsram_sys_init();
-        hidusb_puts("External SRAM has been initialized...");
 #ifdef DEBUG
         // spiioexp_test_blink_led();
         // extsram_test_read_write();
