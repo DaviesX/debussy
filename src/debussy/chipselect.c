@@ -1,5 +1,6 @@
-#include <spiioexp.h>
-#include <chipselect.h>
+#ifndef ARCH_X86_64
+#  include <spiioexp.h>
+#  include <chipselect.h>
 
 
 /*
@@ -29,3 +30,5 @@ void __cs_disable_inclusive(const uint8_t pin)
 void __cs_clear()
 {
 }
+
+#endif // ARCH_X86_64
