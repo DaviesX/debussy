@@ -53,6 +53,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/adc.h" />
+		<Unit filename="../src/debussy/audiointerface.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/audiointerface.h" />
 		<Unit filename="../src/debussy/audioplayer.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -109,10 +113,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/scheduler.h" />
-		<Unit filename="../src/debussy/speaker.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../src/debussy/speaker.h" />
 		<Unit filename="../src/debussy/spiioexp.c">
 			<Option compilerVar="CC" />
 		</Unit>

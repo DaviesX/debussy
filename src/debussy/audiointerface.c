@@ -1,13 +1,13 @@
 #ifndef ARCH_X86_64
 #  include <avr.h>
-#  include <speaker.h>
+#  include <audiointerface.h>
 
 #define DDR     DDRB
 #define PORT    PORTB
 #define PIN     3
 
 
-void speaker_du()
+void audioif_du()
 {
         SET_BIT(DDR, PIN);
         uint16_t i;
@@ -21,7 +21,7 @@ void speaker_du()
         CLR_BIT(PORT, PIN);
 }
 
-static void speaker_set_period(uint16_t period)
+static void audioif_set_period(uint16_t period)
 {
         TCCR1A = 0;
         TCCR1B = 0;
@@ -43,19 +43,19 @@ ISR(TIMER1_COMPA_vect)
         flip = !flip;
 }
 
-void speaker_on()
+void audioif_on()
 {
         SET_BIT(DDR, PIN);
         sei();
 }
 
-void speaker_off()
+void audioif_off()
 {
         cli();
         CLR_BIT(DDR, PIN);
 }
 
-static void speaker_keep(uint16_t ms)
+static void audioif_keep(uint16_t ms)
 {
         TCCR0 = 2;
         while (ms--) {
@@ -66,35 +66,35 @@ static void speaker_keep(uint16_t ms)
         TCCR0 = 0;
 }
 
-void speaker_square_wave_software(uint16_t freq, uint16_t duration, float volume)
+void audioif_square_wave_software(uint16_t freq, uint16_t duration, float volume)
 {
-        speaker_on();
+        audioif_on();
 
         uint16_t period = 2*1000000UL/freq/2;
         uint32_t n = (uint32_t) duration/(uint32_t) period * 500UL;
         uint16_t i;
         for (i = 0; i < n; i ++) {
                 SET_BIT(PORT, PIN);
-                speaker_keep(period);
+                audioif_keep(period);
                 CLR_BIT(PORT, PIN);
-                speaker_keep(period);
+                audioif_keep(period);
         }
 
-        speaker_off();
+        audioif_off();
 }
 
-void speaker_square_wave(uint16_t freq, uint16_t duration, float volume)
+void audioif_square_wave(uint16_t freq, uint16_t duration, float volume)
 {
-        speaker_on();
+        audioif_on();
 
         uint16_t period = 1000000UL/freq/2;
         uint16_t dutycycle = 255*volume;
         OCR0 = dutycycle;
 
-        speaker_set_period(period);
-        speaker_keep(duration*1000);
+        audioif_set_period(period);
+        audioif_keep(duration*1000);
 
-        speaker_off();
+        audioif_off();
 }
 
 #endif // ARCH_X86_64
