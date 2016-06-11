@@ -30,8 +30,8 @@ void cs_sys_init();
 
 static inline void __cs2_clear()
 {
-        CLR_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
         CS_ADDRESS_PORT |= 7;
+        CLR_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
         SET_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
 }
 
@@ -49,8 +49,8 @@ static inline void cs2_sys_init()
 
 static inline void __cs2_enable_exclusive(const uint8_t pin)
 {
-        CLR_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
         CS_ADDRESS_PORT |= pin;
+        CLR_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
         SET_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
 }
 
