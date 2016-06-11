@@ -3,6 +3,7 @@
 #include <extsram.h>
 #include <hidusb.h>
 #include <scheduler.h>
+#include <chipselect.h>
 
 
 static bool __idle(void* user_data)
@@ -13,7 +14,7 @@ static bool __idle(void* user_data)
 int main()
 {
         avr_init();
-        hidusb_sys_init(true);
+        cs2_sys_init();
         spiioexp_sys_init();
         extsram_sys_init();
 #ifdef DEBUG

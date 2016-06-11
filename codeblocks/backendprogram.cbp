@@ -39,13 +39,13 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-mmcu=atmega1284p" />
+			<Add option="-mmcu=atmega1284" />
 			<Add option="-DF_CPU=16000000UL" />
 			<Add option="-DDEBUG" />
 			<Add directory="../src/debussy" />
 		</Compiler>
 		<Linker>
-			<Add option="-mmcu=atmega1284p" />
+			<Add option="-mmcu=atmega1284" />
 			<Add library="../build/libdebussy.a" />
 		</Linker>
 		<ExtraCommands>

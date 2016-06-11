@@ -23,10 +23,13 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-Ofast" />
+					<Add option="-flto" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-Ofast" />
+					<Add option="-flto" />
 				</Linker>
 			</Target>
 		</Build>
@@ -34,11 +37,15 @@
 			<Add option="-Wall" />
 			<Add option="`pkg-config gtk+-3.0 --cflags`" />
 			<Add option="`pkg-config libudev --cflags`" />
+			<Add option="-march=native" />
 			<Add directory="../src/debussyaerial" />
+			<Add directory="../src/debussy" />
 		</Compiler>
 		<Linker>
 			<Add option="`pkg-config gtk+-3.0 --libs`" />
 			<Add option="`pkg-config libudev --libs`" />
+			<Add option="-march=native" />
+			<Add library="../build/libdebussy64.a" />
 		</Linker>
 		<Unit filename="../src/debussyaerial/aerial.c">
 			<Option compilerVar="CC" />

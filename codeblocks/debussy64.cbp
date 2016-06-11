@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="debussy64" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../build/debussy64" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="../build/debussy64" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../build/debussy64" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="../build/debussy64" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-Ofast" />
+					<Add option="-flto" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-Ofast" />
+					<Add option="-flto" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-march=native" />
+			<Add option="-DARCH_X86_64" />
+			<Add directory="../src/debussy" />
+		</Compiler>
+		<Linker>
+			<Add option="-march=native" />
+		</Linker>
+		<Unit filename="../src/debussy/actionprotocols.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/actionprotocols.h" />
+		<Unit filename="../src/debussy/adc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/adc.h" />
+		<Unit filename="../src/debussy/audioplayer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/audioplayer.h" />
+		<Unit filename="../src/debussy/avr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/avr.h" />
+		<Unit filename="../src/debussy/chipselect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/chipselect.h" />
+		<Unit filename="../src/debussy/dac.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/dac.h" />
+		<Unit filename="../src/debussy/display.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/display.h" />
+		<Unit filename="../src/debussy/exteeprom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/exteeprom.h" />
+		<Unit filename="../src/debussy/extsram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/extsram.h" />
+		<Unit filename="../src/debussy/filesystem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/filesystem.h" />
+		<Unit filename="../src/debussy/hidusb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/hidusb.h" />
+		<Unit filename="../src/debussy/keypad.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/keypad.h" />
+		<Unit filename="../src/debussy/lcd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/lcd.h" />
+		<Unit filename="../src/debussy/memory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/memory.h" />
+		<Unit filename="../src/debussy/noteplayer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/noteplayer.h" />
+		<Unit filename="../src/debussy/scheduler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/scheduler.h" />
+		<Unit filename="../src/debussy/speaker.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/speaker.h" />
+		<Unit filename="../src/debussy/spiioexp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/spiioexp.h" />
+		<Unit filename="../src/debussy/types.h" />
+		<Unit filename="../src/debussy/usbconfig.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
