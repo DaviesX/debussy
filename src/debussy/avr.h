@@ -1,25 +1,18 @@
 #ifndef AVR_H_INCLUDED
 #define AVR_H_INCLUDED
 
-#define F_CPU   16000000UL
+#include <types.h>
 
-// exclude incorrect definitions
-#define _INTTYPES_H
-#define _STDINT_H
 
-// use the correct definitions.
-typedef unsigned long   uint32_t;
-typedef unsigned int    uint16_t;
-typedef unsigned char   uint8_t;
-typedef signed long     int32_t;
-typedef signed int      int16_t;
-typedef signed char     int8_t;
-typedef unsigned char   bool;
-#define true            1
-#define false           0
-typedef int32_t         int_farptr_t;
-typedef uint32_t        uint_farptr_t;
-#define nullptr         (void*) 0X0
+#ifndef ARCH_X86_64
+#  define F_CPU 16000000UL
+#  include <avr/interrupt.h>
+#  include <avr/sleep.h>
+#  include <avr/pgmspace.h>
+#  include <util/delay.h>
+#  include <avr/io.h>
+#  include <avr/wdt.h>
+
 struct pin {
         uint8_t* port;
         uint8_t* ddr;
@@ -31,13 +24,6 @@ struct pin {
         (__self)->ddr = (uint8_t *) &(__ddr);           \
         (__self)->pinno = (__pinno);                    \
 }
-
-#include <avr/interrupt.h>
-#include <avr/sleep.h>
-#include <avr/pgmspace.h>
-#include <util/delay.h>
-#include <avr/io.h>
-#include <avr/wdt.h>
 
 #define XTAL_FRQ F_CPU
 
@@ -55,6 +41,8 @@ void avr_wait2(uint16_t msec, uint16_t (*callback) (), void* data);
 void avr_wait_micro(uint16_t microsec);
 void avr_nop(uint16_t ms);
 void avr_set_timer1_ctc(uint32_t milli);
+
+#endif // ARCH_X86_64
 
 
 #endif  // AVR_H_INCLUDED

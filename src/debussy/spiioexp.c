@@ -1,6 +1,7 @@
-#include <avr.h>
-#include <chipselect.h>
-#include <spiioexp.h>
+#ifndef ARCH_X86_64
+#  include <avr.h>
+#  include <chipselect.h>
+#  include <spiioexp.h>
 
 #define SPI_PORT        PORTB
 #define SPI_PIN         PINB
@@ -209,3 +210,5 @@ void spiioexp2_write_pins(const struct spiioexp2* self, const uint8_t data)
         }
         cs_disable_exclusive(self->logic_cs);
 }
+
+#endif // ARCH_X86_64

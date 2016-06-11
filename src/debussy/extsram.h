@@ -1,7 +1,8 @@
 #ifndef EXTSRAM_H_INCLUDED
 #define EXTSRAM_H_INCLUDED
 
-#include <avr.h>
+#ifndef ARCH_X86_64
+#  include <avr.h>
 
 /*
  * <extsram_addr> decl
@@ -68,6 +69,8 @@ void extsram_read(const struct extsram* self, const struct extsram_addr* addr, v
  * <extsram> test cases
  */
 void extsram_test_read_write();
+
+#endif // ARCH_X86_64
 
 
 #endif // EXTSRAM_H_INCLUDED

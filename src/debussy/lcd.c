@@ -1,5 +1,7 @@
-#include <avr.h>
-#include <lcd.h>
+#ifndef ARCH_X86_64
+#  include <avr.h>
+#  include <lcd.h>
+
 
 #define DDR     DDRB
 #define PORT    PORTB
@@ -134,3 +136,5 @@ void lcd_puti16n(uint16_t value, int n)
         }
         lcd_puts(&buf[i]);
 }
+
+#endif  // ARCH_X86_64

@@ -1,5 +1,5 @@
 #include <math.h>
-#include <avr.h>
+#include <types.h>
 #include <noteplayer.h>
 
 #define WHOLE_NOTE      16

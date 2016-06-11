@@ -1,10 +1,11 @@
-#include <stdio.h>
-#include <string.h>
-#include <avr.h>
-#include <chipselect.h>
-#include <usbdrv/usbdrv.h>
-#include <usbconfig.h>
-#include <hidusb.h>
+#ifndef ARCH_X86_64
+#  include <stdio.h>
+#  include <string.h>
+#  include <avr.h>
+#  include <chipselect.h>
+#  include <usbdrv/usbdrv.h>
+#  include <usbconfig.h>
+#  include <hidusb.h>
 
 #define USB_PORT    PORTD
 #define USB_DDR     DDRD
@@ -185,3 +186,5 @@ void hidusb_print_test()
                 wdt_reset();
         }
 }
+
+#endif // ARCH_X86_64

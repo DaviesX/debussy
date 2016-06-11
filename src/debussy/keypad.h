@@ -1,6 +1,8 @@
 #ifndef KEYPAD_H_INCLUDED
 #define KEYPAD_H_INCLUDED
 
+#ifndef ARCH_X86_64
+
 enum KEY {
         KEY_D,
         KEY_C,
@@ -26,6 +28,8 @@ enum KEY {
  */
 uint8_t key_get_pressed(uint16_t milli);
 uint8_t key_to_digit(uint8_t key_code);
+
+#endif // ARCH_X86_64
 
 
 #endif // KEYPAD_H_INCLUDED

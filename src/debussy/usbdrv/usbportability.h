@@ -23,8 +23,8 @@ Thanks to Oleg Semyonov for his help with the IAR tools port!
 #ifndef __usbportability_h_INCLUDED__
 #define __usbportability_h_INCLUDED__
 
-#define int_farptr_t    singed long
-#define uint_farptr_t   unsigned long
+#  define int_farptr_t  int32_t
+#  define uint_farptr_t uint32_t
 
 /* We check explicitly for IAR and CodeVision. Default is avr-gcc/avr-libc. */
 

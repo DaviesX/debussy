@@ -1,7 +1,8 @@
 #ifndef HIDUSB_H_INCLUDED
 #define HIDUSB_H_INCLUDED
 
-#include <avr.h>
+#ifndef ARCH_X86_64
+#  include <avr.h>
 
 
 /*
@@ -23,6 +24,8 @@ void hidusb_puts(const char* s);
  * <hidusb> test cases
  */
 void hidusb_print_test();
+
+#endif // ARCH_X86_64
 
 
 #endif // HIDUSB_H_INCLUDED

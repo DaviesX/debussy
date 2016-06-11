@@ -24,24 +24,34 @@ void cs_sys_init();
 // fast circuit implementation.
 #define CS_ADDRESS_PORT         PORTD
 #define CS_ADDRESS_DDR          DDRD
+#define CS_LATCH_CS_PORT        PORTB
+#define CS_LATCH_CS_DDR         DDRB
+#define CS_LATCH_CS_PIN         PB3
 
 static inline void __cs2_clear()
 {
+        CLR_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
         CS_ADDRESS_PORT |= 7;
+        SET_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
 }
 
 static inline void cs2_sys_init()
 {
-        SET_BIT(CS_ADDRESS_DDR, 0);
-        SET_BIT(CS_ADDRESS_DDR, 1);
-        SET_BIT(CS_ADDRESS_DDR, 2);
+        SET_BIT(CS_ADDRESS_DDR, PORT0);
+        SET_BIT(CS_ADDRESS_DDR, PORT1);
+        SET_BIT(CS_ADDRESS_DDR, PORT2);
+
+        SET_BIT(CS_LATCH_CS_DDR, CS_LATCH_CS_PIN);
+        SET_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
 
         __cs2_clear();
 }
 
 static inline void __cs2_enable_exclusive(const uint8_t pin)
 {
+        CLR_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
         CS_ADDRESS_PORT |= pin;
+        SET_BIT(CS_LATCH_CS_PORT, CS_LATCH_CS_PIN);
 }
 
 static inline void __cs2_disable_exclusive(const uint8_t pin)

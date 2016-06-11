@@ -1,8 +1,9 @@
 #ifndef SPIIOEXP_H_INCLUDED
 #define SPIIOEXP_H_INCLUDED
 
-#include <avr.h>
-#include <chipselect.h>
+#ifndef ARCH_X86_64
+#  include <avr.h>
+#  include <chipselect.h>
 
 
 /*
@@ -49,5 +50,6 @@ void            spiioexp2_init_write_mode(struct spiioexp2* self, const uint8_t 
 uint8_t         spiioexp2_read_pins(const struct spiioexp2* self);
 void            spiioexp2_write_pins(const struct spiioexp2* self, const uint8_t data);
 
+#endif // ARCH_X86_64
 
 #endif // SPIIOEXP_H_INCLUDED

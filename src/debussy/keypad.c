@@ -1,6 +1,7 @@
-#include <avr.h>
-#include <lcd.h>
-#include <keypad.h>
+#ifndef ARCH_X86_64
+#  include <avr.h>
+#  include <lcd.h>
+#  include <keypad.h>
 
 #define KEY_PORT        PORTA
 #define KEY_PIN         PINA
@@ -92,3 +93,5 @@ char key_to_char(uint8_t key_code)
                 return '\0';
         }
 }
+
+#endif // ARCH_X86_64

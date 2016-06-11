@@ -1,7 +1,8 @@
-#include <stdlib.h>
-#include <avr.h>
-#include <chipselect.h>
-#include <extsram.h>
+#ifndef ARCH_X86_64
+#  include <avr.h>
+#  include <stdlib.h>
+#  include <chipselect.h>
+#  include <extsram.h>
 
 #define CE              // this is handled by the user.
 #define OE              PB6
@@ -175,3 +176,5 @@ failed:
                 SET_BIT(PORTB, 7);
         }
 }
+
+#endif // ARCH_X86_64

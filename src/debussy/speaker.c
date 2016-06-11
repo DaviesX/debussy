@@ -1,5 +1,6 @@
-#include <avr.h>
-#include <speaker.h>
+#ifndef ARCH_X86_64
+#  include <avr.h>
+#  include <speaker.h>
 
 #define DDR     DDRB
 #define PORT    PORTB
@@ -95,3 +96,5 @@ void speaker_square_wave(uint16_t freq, uint16_t duration, float volume)
 
         speaker_off();
 }
+
+#endif // ARCH_X86_64

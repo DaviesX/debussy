@@ -1,8 +1,9 @@
-#include <avr.h>
-#include <lcd.h>
-#include <adc.h>
+#ifndef ARCH_X86_64
+#  include <avr.h>
+#  include <lcd.h>
+#  include <adc.h>
 
-#define ADC_PORT        PORTA
+#  define ADC_PORT        PORTA
 
 void adc_init()
 {
@@ -32,3 +33,5 @@ ISR(ADC_vect)
         g_adc8 = ADCH;
         SET_BIT(ADCSRA, ADSC);
 }
+
+#endif // ARCH_X86_64

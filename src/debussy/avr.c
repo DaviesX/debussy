@@ -1,3 +1,5 @@
+#ifndef ARCH_X86_64
+
 #include <avr.h>
 
 
@@ -52,10 +54,10 @@ void avr_wait_micro(uint16_t microsec)
 
 void avr_nop(uint16_t ms)
 {
-       volatile unsigned long i, n = (F_CPU/46000)*ms;
-       for (i = 0; i < n; i ++) {
+        volatile unsigned long i, n = (F_CPU/46000)*ms;
+        for (i = 0; i < n; i ++) {
                 wdt_reset();
-       }
+        }
 }
 
 void avr_set_timer1_ctc(uint32_t milli)
@@ -72,3 +74,5 @@ void avr_set_timer1_ctc(uint32_t milli)
         SET_BIT(TIMSK, OCIE1A);
         sei();
 }
+
+#endif // ARCH_X86_64
