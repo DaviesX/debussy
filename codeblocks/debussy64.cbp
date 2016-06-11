@@ -105,6 +105,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/memory.h" />
+		<Unit filename="../src/debussy/musicsheet.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/musicsheet.h" />
 		<Unit filename="../src/debussy/noteplayer.c">
 			<Option compilerVar="CC" />
 		</Unit>
