@@ -133,18 +133,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="mi-connect2local">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">_Connect to Local</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
                       <object class="GtkMenuItem" id="mi-scan-connection">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">_Scan Connections</property>
+                        <property name="label" translatable="yes">Scan connections</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>
@@ -152,7 +144,15 @@
                       <object class="GtkMenuItem" id="mi-connect2avr">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">_Connect to AVR</property>
+                        <property name="label" translatable="yes">Connect to avr</property>
+                        <property name="use_underline">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="mi-connect2local">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Connect to local</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>
