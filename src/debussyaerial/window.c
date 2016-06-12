@@ -13,6 +13,8 @@
 
 struct window_impl {
         struct window*          public_ref;
+        GtkWindow*              win_frame;
+        GtkStatusbar*           sb_status;
         GtkDialog*              dl_helpabout;
         GtkDialog*              dl_connection;
         GtkComboBoxText*        cb_selected;
@@ -26,6 +28,7 @@ struct window_impl {
 /*
  * <window> private
  */
+/******************* APIs *******************/
 static void __window_impl_init(struct window_impl* self, struct window* public_ref)
 {
         memset(self, 0, sizeof(*self));
@@ -41,17 +44,47 @@ static void __window_impl_free(struct window_impl* self)
 }
 
 static void __window_impl_set_ui(struct window_impl* self,
+                                 GtkWindow* win_frame,
+                                 GtkStatusbar* sb_status,
                                  GtkDialog* dl_helpabout,
                                  GtkDialog* dl_connection,
                                  GtkComboBoxText* cb_selected,
                                  GtkButton* bt_conn_confirm,
                                  GtkButton* bt_conn_cancel)
 {
+        self->win_frame = win_frame,
+        self->sb_status = sb_status;
         self->dl_helpabout = dl_helpabout;
         self->dl_connection = dl_connection;
         self->cb_selected = cb_selected;
         self->bt_conn_confirm = bt_conn_confirm;
         self->bt_conn_cancel = bt_conn_cancel;
+}
+/******************* APIs *******************/
+
+/******************* GUI utils *******************/
+static void __window_impl_push_status(struct window_impl* self, const char* status)
+{
+        if (self->sb_status) {
+                guint id = gtk_statusbar_get_context_id(self->sb_status, AERIAL_VERSION_STRING);
+                gtk_statusbar_push(self->sb_status, id, status);
+        }
+}
+
+static void __window_impl_pop_status(struct window_impl* self)
+{
+        if (self->sb_status) {
+                guint id = gtk_statusbar_get_context_id(self->sb_status, AERIAL_VERSION_STRING);
+                gtk_statusbar_pop(self->sb_status, id);
+        }
+}
+
+static void __window_impl_update(struct window_impl* self, const char* title, int w, int h)
+{
+        if (self->win_frame) {
+                gtk_window_set_title(GTK_WINDOW(self->win_frame), title);
+                gtk_widget_set_size_request(GTK_WIDGET(self->win_frame), w, h);
+        }
 }
 
 static int __window_impl_show_message_box(const char* title, const char* message, const GtkMessageType type, GtkWindow* parent)
@@ -84,7 +117,10 @@ static int __window_impl_show_message_box(const char* title, const char* message
                 return 0;
         }
 }
+/******************* GUI utils *******************/
 
+/******************* Callback controllers *******************/
+// Handling connections.
 static void __window_impl_on_scan_connections(GtkMenuItem* menuitem, gpointer user_data)
 {
         struct window_impl* self = (struct window_impl*) user_data;
@@ -105,16 +141,16 @@ static void __window_impl_on_conn_confirm(GtkButton* button, gpointer user_data)
                         if (!usb_connect_to(&self->usb, &self->conns[id], self->public_ref->console)) {
                                 sprintf(msg, "Connection %s cannot be established", conn_str), free(conn_str);
                                 __window_impl_show_message_box(AERIAL_VERSION_STRING, msg,
-                                                               GTK_MESSAGE_ERROR, self->public_ref->win_widget);
+                                                               GTK_MESSAGE_ERROR, self->win_frame);
                         } else {
                                 sprintf(msg, "Has been connected to %s", conn_str), free(conn_str);
                                 __window_impl_show_message_box(AERIAL_VERSION_STRING, msg,
-                                                               GTK_MESSAGE_INFO, self->public_ref->win_widget);
+                                                               GTK_MESSAGE_INFO, self->win_frame);
                                 gtk_widget_hide(GTK_WIDGET(self->dl_connection));
                         }
                 } else {
                         __window_impl_show_message_box(AERIAL_VERSION_STRING, "Invalid connection",
-                                                       GTK_MESSAGE_ERROR, self->public_ref->win_widget);
+                                                       GTK_MESSAGE_ERROR, self->win_frame);
                 }
         } else {
                 gtk_widget_hide(GTK_WIDGET(self->dl_connection));
@@ -145,12 +181,14 @@ static void __window_impl_on_connect2avr(GtkMenuItem* menuitem, gpointer user_da
         usbconns_free_strings(texts, self->n_conns);
 }
 
+// Help about.
 static void __window_impl_on_help_about(GtkMenuItem* menuitem, gpointer user_data)
 {
         struct window_impl* self = (struct window_impl*) user_data;
         gtk_dialog_run(self->dl_helpabout);
 }
 
+// Device access.
 static gboolean __window_impl_fetch_device_console(gpointer user_data)
 {
         struct window_impl* self = (struct window_impl*) user_data;
@@ -170,6 +208,7 @@ static gboolean __window_impl_capture_device(GtkButton* button, gpointer user_da
                 console_log(self->public_ref->console, ConsoleLogNormal, "device: %s", msg), free(msg);
         return TRUE;
 }
+/******************* Callback controllers *******************/
 
 /*
  * <window> public
@@ -177,7 +216,6 @@ static gboolean __window_impl_capture_device(GtkButton* button, gpointer user_da
 void window_init(struct window* self, int* argc, char*** argv)
 {
         memset(self, 0, sizeof(*self));
-        self->win_widget = nullptr;
         self->argc = argc;
         self->argv = argv;
         self->console = stdconsole_create();
@@ -210,24 +248,9 @@ void window_set_size(struct window* self, const int w, const int h)
         self->h = h;
 }
 
-void window_push_status(struct window* self, const char* status)
-{
-        if (self->status_bar) {
-                guint id = gtk_statusbar_get_context_id(self->status_bar, AERIAL_VERSION_STRING);
-                gtk_statusbar_push(self->status_bar, id, status);
-        }
-}
-
-void window_pop_status(struct window* self)
-{
-}
-
 void window_update(struct window* self)
 {
-        if (self->win_widget != NULL) {
-                gtk_window_set_title(GTK_WINDOW(self->win_widget), self->title);
-                gtk_widget_set_size_request(GTK_WIDGET(self->win_widget), self->w, self->h);
-        }
+        __window_impl_update(self->pimpl, self->title, self->w, self->h);
 }
 
 GtkBuilder* __window_builder_load(const struct window* self, const char* filename)
@@ -260,14 +283,15 @@ void window_run(struct window* self)
         g_log_set_handler("Gtk", G_LOG_LEVEL_WARNING, g_log_default_handler, NULL);
 
         // Create the main window from builder.
+        GtkWindow* win_frame = nullptr;
         GtkBuilder* builder = __window_builder_load(self, "data/debussy-aerial.glade");
         if (builder == nullptr) {
                 console_log(self->console, ConsoleLogSevere, "Failed to build aerial UI. Use fallback window.");
-                self->win_widget = (GtkWindow*) gtk_window_new(GTK_WINDOW_TOPLEVEL);
+                win_frame = (GtkWindow*) gtk_window_new(GTK_WINDOW_TOPLEVEL);
         } else {
                 console_log(self->console, ConsoleLogSevere, "Window has been loaded.");
-                self->win_widget = (GtkWindow*) gtk_builder_get_object(builder, "win-main-frame");
-                self->status_bar = (GtkStatusbar*) gtk_builder_get_object(builder, "sb-main");
+                win_frame = (GtkWindow*) gtk_builder_get_object(builder, "win-main-frame");
+                GtkStatusbar* sb_status = (GtkStatusbar*) gtk_builder_get_object(builder, "sb-main");
                 GtkTextView* tv_console = (GtkTextView*) gtk_builder_get_object(builder, "tv-console");
                 if (tv_console == nullptr) {
                         console_log(self->console, ConsoleLogSevere, "Cannot load gtk console widget. Use fallback console.");
@@ -320,6 +344,8 @@ void window_run(struct window* self)
                         console_log(self->console, ConsoleLogSevere, "Cannot load impl UIs");
                 } else {
                         __window_impl_set_ui(self->pimpl,
+                                             win_frame,
+                                             sb_status,
                                              dl_helpabout,
                                              dl_conn,
                                              cb_selected,
@@ -331,15 +357,17 @@ void window_run(struct window* self)
         }
 
         window_update(self);
-        gtk_window_set_position(GTK_WINDOW(self->win_widget), GTK_WIN_POS_CENTER);
-        gtk_widget_realize(GTK_WIDGET(self->win_widget));
+        gtk_window_set_position(GTK_WINDOW(win_frame), GTK_WIN_POS_CENTER);
+        gtk_widget_realize(GTK_WIDGET(win_frame));
 
-        window_push_status(self, AERIAL_VERSION_STRING);
+        __window_impl_push_status(self->pimpl, AERIAL_VERSION_STRING);
 
         // Install signals.
-        g_signal_connect(self->win_widget, "destroy", gtk_main_quit, NULL);
+        g_signal_connect(GTK_WIDGET(win_frame), "destroy", gtk_main_quit, NULL);
 
         // Enter the main loop.
-        gtk_widget_show_all(GTK_WIDGET(self->win_widget));
+        gtk_widget_show_all(GTK_WIDGET(win_frame));
         gtk_main();
+
+        __window_impl_pop_status(self->pimpl);
 }
