@@ -15,5 +15,11 @@
 			<Depends filename="debussy.cbp" />
 		</Project>
 		<Project filename="debussy64.cbp" />
+		<Project filename="utests.cbp">
+			<Depends filename="debussy.cbp" />
+		</Project>
+		<Project filename="utestavr.cbp">
+			<Depends filename="debussy.cbp" />
+		</Project>
 	</Workspace>
 </CodeBlocks_workspace_file>
