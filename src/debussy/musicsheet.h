@@ -40,7 +40,7 @@ void            musicsheet_set_tempo(struct musicsheet* self, uint8_t bpm);
 /*
  * <musicsheet> test cases
  */
-void            musicsheet_test_play_midi_file();
+void            musicsheet_test_play_midi_file(struct file* file);
 
 
 #endif // MUSICSHEET_H_INCLUDED
