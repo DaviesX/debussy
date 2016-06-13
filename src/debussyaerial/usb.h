@@ -47,6 +47,7 @@ void                    usb_init(struct usb* self);
 void                    usb_free(struct usb* self);
 struct usb_connection*  usb_scan_connections(const struct usb* self, int* num_conns, struct console* console);
 bool                    usb_connect_to(struct usb* self, struct usb_connection* conn, struct console* console);
+bool                    usb_disconnect(struct usb* self, struct console* console);
 bool                    usb_is_connected(struct usb* self);
 char*                   usb_fetch_console_string(const struct usb* self, size_t* num_bytes);
 char*                   usb_capture(const struct usb* self, size_t* num_bytes);

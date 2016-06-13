@@ -162,8 +162,7 @@ static void __window_impl_on_connect2avr(GtkMenuItem* menuitem, gpointer user_da
         struct window_impl* self = (struct window_impl*) user_data;
 
         // Refresh connections.
-        free(self->conns);
-        self->conns = usb_scan_connections(&self->usb, &self->n_conns, nullptr);
+        __window_impl_on_scan_connections(menuitem, user_data);
 
         // Initialize selection box.
         char** texts = usbconns_format_as_strings(self->conns, self->n_conns);
@@ -179,6 +178,14 @@ static void __window_impl_on_connect2avr(GtkMenuItem* menuitem, gpointer user_da
         gtk_widget_show(GTK_WIDGET(self->dl_connection));
 
         usbconns_free_strings(texts, self->n_conns);
+}
+
+static void __window_impl_on_connect2local(GtkMenuItem* menuitem, gpointer user_data)
+{
+        struct window_impl* self = (struct window_impl*) user_data;
+
+        // Disconnect to the AVR device first.
+        usb_disconnect(&self->usb, self->public_ref->console);
 }
 
 // Help about.
@@ -311,10 +318,17 @@ void window_run(struct window* self)
                 }
                 GtkMenuItem* mi_conn2avr = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-connect2avr");
                 if (mi_conn2avr == nullptr) {
-                        console_log(self->console, ConsoleLogSevere, "Cannot load scan connection menu item.");
+                        console_log(self->console, ConsoleLogSevere, "Cannot load connect-to-avr menu item.");
                 } else {
                         g_signal_connect(G_OBJECT(mi_conn2avr), "activate",
                                          G_CALLBACK(__window_impl_on_connect2avr), self->pimpl);
+                }
+                GtkMenuItem* mi_conn2local = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-connect2local");
+                if (mi_conn2local == nullptr) {
+                        console_log(self->console, ConsoleLogSevere, "Cannot load connect-to-local menu item.");
+                } else {
+                        g_signal_connect(G_OBJECT(mi_conn2local), "activate",
+                                         G_CALLBACK(__window_impl_on_connect2local), self->pimpl);
                 }
                 GtkMenuItem* mi_helpabout = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-helpabout");
                 if (mi_helpabout == nullptr) {

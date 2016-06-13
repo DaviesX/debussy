@@ -3,6 +3,8 @@
 
 #include <types.h>
 
+#define DEBUSSY_VERSION_STRING   "debussy - 0.0.1"
+
 
 #ifndef ARCH_X86_64
 #  define F_CPU 16000000UL

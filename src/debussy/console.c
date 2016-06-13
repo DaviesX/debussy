@@ -1,11 +1,4 @@
-#define _GNU_SOURCE
-#include <gtk/gtk.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <assert.h>
-#include <aerial.h>
+#include <avr.h>
 #include <console.h>
 
 
@@ -23,6 +16,13 @@ void console_free(struct console* self)
         self->f_free(self);
 }
 
+#ifdef ARCH_X86_64
+#  include <gtk/gtk.h>
+#  include <stdio.h>
+#  include <stdlib.h>
+#  include <stdarg.h>
+#  include <string.h>
+#  include <assert.h>
 
 /*
  * <stdconsole> public
@@ -38,13 +38,13 @@ void stdconsole_init(struct stdconsole* self)
 {
         console_init(&self->__parent, (f_Console_Log) stdconsole_log, (f_Console_Free) stdconsole_free);
         stdconsole_log(self, ConsoleLogNormal,
-                       "-------------- %s - stdconsole connected ---------------", AERIAL_VERSION_STRING);
+                       "-------------- %s - stdconsole connected ---------------", DEBUSSY_VERSION_STRING);
 }
 
 void stdconsole_free(struct stdconsole* self)
 {
         stdconsole_log(self, ConsoleLogNormal,
-                       "-------------- %s - stdconsole disconnected ---------------", AERIAL_VERSION_STRING);
+                       "-------------- %s - stdconsole disconnected ---------------", DEBUSSY_VERSION_STRING);
 }
 
 int stdconsole_log(const struct stdconsole* self, const int log_level, const char* format, ...)
@@ -82,13 +82,13 @@ void gtkconsole_init(struct gtkconsole* self, GtkTextView* target_widget)
         self->stdconsole = (struct stdconsole*) stdconsole_create();
 
         gtkconsole_log(self, ConsoleLogNormal,
-                       "-------------- %s - gtkconsole connected ---------------", AERIAL_VERSION_STRING);
+                       "-------------- %s - gtkconsole connected ---------------", DEBUSSY_VERSION_STRING);
 }
 
 void gtkconsole_free(struct gtkconsole* self)
 {
         gtkconsole_log(self, ConsoleLogNormal,
-                       "-------------- %s - gtkconsole disconnected ---------------", AERIAL_VERSION_STRING);
+                       "-------------- %s - gtkconsole disconnected ---------------", DEBUSSY_VERSION_STRING);
         stdconsole_free(self->stdconsole);
 }
 
@@ -114,3 +114,5 @@ int gtkconsole_log(const struct gtkconsole* self, const int log_level, const cha
         va_end(list);
         return ret;
 }
+
+#endif // ARCH_X86_64

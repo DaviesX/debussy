@@ -37,6 +37,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-mmcu=atmega32" />
+			<Add option="-D_GNU_SOURCE" />
 			<Add directory="../src/debussy" />
 			<Add directory="/usr/lib/avr/include" />
 		</Compiler>
@@ -67,14 +68,18 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/chipselect.h" />
+		<Unit filename="../src/debussy/connection.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/connection.h" />
+		<Unit filename="../src/debussy/console.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/console.h" />
 		<Unit filename="../src/debussy/dac.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/dac.h" />
-		<Unit filename="../src/debussy/display.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../src/debussy/display.h" />
 		<Unit filename="../src/debussy/exteeprom.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -167,9 +167,9 @@ bool usb_is_connected(struct usb* self)
 
 bool usb_connect_to(struct usb* self, struct usb_connection* conn, struct console* console)
 {
-        // Close old file descriptor.
-        if (conn->fd >= 0)
-                close(conn->fd);
+        // Close old device.
+        usb_disconnect(self, console);
+
         // Open new device.
         char* conn_str = usbconn_format_as_string(conn);
         if (0 > (conn->fd = open(conn->dev_node_path, O_RDWR | O_NONBLOCK))) {
@@ -183,6 +183,28 @@ bool usb_connect_to(struct usb* self, struct usb_connection* conn, struct consol
                 self->is_connected = true;
                 return true;
         }
+}
+
+bool usb_disconnect(struct usb* self, struct console* console)
+{
+        if (!self->is_connected) {
+                console_log(console, ConsoleLogNormal, "Nothing to disconnect");
+                return true;
+        }
+
+        // Close old file descriptor.
+        char* conn_str = usbconn_format_as_string(&self->conn);
+        if (self->conn.fd >= 0) {
+                if (0 > close(self->conn.fd)) {
+                        console_log(console, ConsoleLogSevere, "Failed to close device %s", conn_str), free(conn_str);
+                        console_log(console, ConsoleLogSevere, "Cause: %s", strerror(errno));
+                        return false;
+                }
+        }
+
+        console_log(console, ConsoleLogSevere, "Successfully closed device %s", conn_str), free(conn_str);
+        self->is_connected = false;
+        return true;
 }
 
 #define REPORT_BYTE_COUNT       64

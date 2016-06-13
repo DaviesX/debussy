@@ -28,6 +28,7 @@ void console_free(struct console* self);
 #define console_log(__self, __log_level, __format, ...)         \
         ((__self) == nullptr ? -1 : (__self)->f_console_log(__self, (__log_level), __format, ##__VA_ARGS__))
 
+#ifdef ARCH_X86_64
 /*
  * <stdconsole> decl
  */
@@ -62,6 +63,8 @@ struct console* gtkconsole_create(GtkTextView* target_widget);
 void gtkconsole_init(struct gtkconsole* self, GtkTextView* target_widget);
 void gtkconsole_free(struct gtkconsole* self);
 int gtkconsole_log(const struct gtkconsole* self, const int log_level, const char* format, ...);
+
+#endif // ARCH_X86_64
 
 
 #endif // CONSOLE_H_INCLUDED
