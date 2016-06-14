@@ -89,7 +89,6 @@ char*                   conn_2string(struct connection* self);
  */
 struct conn_a2h {
         struct connection __parent;
-        bool              is_connected;
 };
 
 /*
