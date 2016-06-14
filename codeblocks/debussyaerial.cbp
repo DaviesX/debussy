@@ -52,10 +52,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussyaerial/aerial.h" />
-		<Unit filename="../src/debussyaerial/window.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../src/debussyaerial/window.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
