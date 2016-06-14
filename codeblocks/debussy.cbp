@@ -72,6 +72,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/connection.h" />
+		<Unit filename="../src/debussy/connmgr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/connmgr.h" />
 		<Unit filename="../src/debussy/console.c">
 			<Option compilerVar="CC" />
 		</Unit>

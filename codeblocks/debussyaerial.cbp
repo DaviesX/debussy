@@ -36,7 +36,6 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="`pkg-config gtk+-3.0 --cflags`" />
-			<Add option="`pkg-config libudev --cflags`" />
 			<Add option="-march=native" />
 			<Add option="-DARCH_X86_64" />
 			<Add directory="../src/debussyaerial" />
@@ -53,14 +52,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussyaerial/aerial.h" />
-		<Unit filename="../src/debussyaerial/connmgr.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../src/debussyaerial/connmgr.h" />
-		<Unit filename="../src/debussyaerial/usb.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../src/debussyaerial/usb.h" />
 		<Unit filename="../src/debussyaerial/window.c">
 			<Option compilerVar="CC" />
 		</Unit>

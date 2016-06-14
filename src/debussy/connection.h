@@ -1,11 +1,18 @@
 #ifndef CONNECTION_H_INCLUDED
 #define CONNECTION_H_INCLUDED
 
+#include <types.h>
 #include <string.h>
 
 /*
  * <connection> decl
  */
+enum ConnectionType {
+        ConnectionAvr2Host,
+        ConnectionHost2Avr,
+        ConnectionHostLocal,
+};
+
 struct console;
 struct action_protocol;
 struct filesystem;
@@ -31,6 +38,7 @@ typedef char*                   (*f_Conn_2string) (struct connection* self);
 
 struct connection {
         char*                           id;
+        uint8_t                         type;
         struct console*                 console;
         f_Conn_Free                     f_free;
         f_Conn_Connect_To               f_connect_to;
@@ -51,7 +59,7 @@ struct connection {
 /*
  * <connection> public
  */
-void                    conn_init(struct connection* self, struct console* console, const char* id,
+void                    conn_init(struct connection* self, struct console* console, const char* id, uint8_t type,
                                   f_Conn_Free f_free,
                                   f_Conn_Connect_To f_connect_to,
                                   f_Conn_Disconnect f_disconnect,
@@ -68,6 +76,7 @@ void                    conn_init(struct connection* self, struct console* conso
                                   f_Conn_2string f_2string);
 void                    conn_free(struct connection* self);
 #define                 conn_is_equal(__self, __id)   (!strcmp((__self)->id, __id))
+#define                 conn_is_of_type(__self, __type)  ((__self)->type == (__type))
 bool                    conn_connect_to(struct connection* self);
 bool                    conn_disconnect(struct connection* self);
 bool                    conn_is_connected(struct connection* self);
@@ -174,7 +183,7 @@ struct conn_local {
  * <conn_local> public
  */
 struct conn_local*      conn_local_create(struct console* console, struct filesystem* base);
-void                    conn_local_init(struct conn_local* self, struct filesystem* base);
+bool                    conn_local_init(struct conn_local* self, struct filesystem* base);
 void                    conn_local_free(struct conn_local* self);
 bool                    conn_local_connect_to(struct conn_local* self);
 bool                    conn_local_disconnect(struct conn_local* self);

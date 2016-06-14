@@ -3,7 +3,8 @@
 #include <gtk/gtk.h>
 #include <aerial.h>
 #include <console.h>
-#include <usb.h>
+#include <connection.h>
+#include <connmgr.h>
 #include <window.h>
 
 
@@ -20,9 +21,8 @@ struct window_impl {
         GtkComboBoxText*        cb_selected;
         GtkButton*              bt_conn_confirm;
         GtkButton*              bt_conn_cancel;
-        struct usb              usb;
-        struct usb_connection*  conns;
-        int                     n_conns;
+        struct conn_manager     conn_mgr;
+        struct connection*      curr_conn;
 };
 
 /*
@@ -33,13 +33,12 @@ static void __window_impl_init(struct window_impl* self, struct window* public_r
 {
         memset(self, 0, sizeof(*self));
         self->public_ref = public_ref;
-        usb_init(&self->usb);
+        connmgr_init(&self->conn_mgr);
 }
 
 static void __window_impl_free(struct window_impl* self)
 {
-        usb_free(&self->usb);
-        free(self->conns);
+        connmgr_free(&self->conn_mgr);
         memset(self, 0, sizeof(*self));
 }
 
@@ -125,24 +124,30 @@ static void __window_impl_on_scan_connections(GtkMenuItem* menuitem, gpointer us
 {
         struct window_impl* self = (struct window_impl*) user_data;
         // Refresh connections.
-        free(self->conns);
-        self->conns = usb_scan_connections(&self->usb, &self->n_conns, self->public_ref->console);
+        connmgr_add_scanned_avr_connections(&self->conn_mgr, self->public_ref->console);
 }
 
 static void __window_impl_on_conn_confirm(GtkButton* button, gpointer user_data)
 {
         struct window_impl* self = (struct window_impl*) user_data;
         if (button == self->bt_conn_confirm) {
-                int id = gtk_combo_box_get_active(GTK_COMBO_BOX(self->cb_selected));
-                if (id >= 0 && id < self->n_conns) {
+                struct connection* conn = connmgr_get_connection(&self->conn_mgr,
+                                              gtk_combo_box_get_active_id(GTK_COMBO_BOX(self->cb_selected)));
+                if (conn) {
                         char msg[256];
-                        char* conn_str = usbconn_format_as_string(&self->conns[id]);
+                        char* conn_str = conn_2string(conn);
 
-                        if (!usb_connect_to(&self->usb, &self->conns[id], self->public_ref->console)) {
+                        if (!conn_connect_to(conn)) {
                                 sprintf(msg, "Connection %s cannot be established", conn_str), free(conn_str);
                                 __window_impl_show_message_box(AERIAL_VERSION_STRING, msg,
                                                                GTK_MESSAGE_ERROR, self->win_frame);
                         } else {
+                                // Connected to the device successfully.
+                                if (self->curr_conn) {
+                                        // Disconnect the previous device.
+                                        conn_disconnect(self->curr_conn);
+                                }
+                                self->curr_conn = conn;
                                 sprintf(msg, "Has been connected to %s", conn_str), free(conn_str);
                                 __window_impl_show_message_box(AERIAL_VERSION_STRING, msg,
                                                                GTK_MESSAGE_INFO, self->win_frame);
@@ -157,7 +162,7 @@ static void __window_impl_on_conn_confirm(GtkButton* button, gpointer user_data)
         }
 }
 
-static void __window_impl_on_connect2avr(GtkMenuItem* menuitem, gpointer user_data)
+static void __window_impl_on_connect2dev(GtkMenuItem* menuitem, gpointer user_data)
 {
         struct window_impl* self = (struct window_impl*) user_data;
 
@@ -165,11 +170,12 @@ static void __window_impl_on_connect2avr(GtkMenuItem* menuitem, gpointer user_da
         __window_impl_on_scan_connections(menuitem, user_data);
 
         // Initialize selection box.
-        char** texts = usbconns_format_as_strings(self->conns, self->n_conns);
+        char** texts = connmgr_2strings(&self->conn_mgr);
+        const struct connection** conns = connmgr_get_all_connections(&self->conn_mgr);
         gtk_combo_box_text_remove_all(self->cb_selected);
         int i;
-        for (i = 0; i < self->n_conns; i ++) {
-                gtk_combo_box_text_insert(self->cb_selected, -1, self->conns[i].vender_id, texts[i]);
+        for (i = 0; i < connmgr_size(&self->conn_mgr); i ++) {
+                gtk_combo_box_text_insert(self->cb_selected, -1, conns[i]->id, texts[i]);
         }
 
         // Run selection dialog.
@@ -177,15 +183,11 @@ static void __window_impl_on_connect2avr(GtkMenuItem* menuitem, gpointer user_da
         g_signal_connect(self->bt_conn_cancel, "clicked", G_CALLBACK(__window_impl_on_conn_confirm), self);
         gtk_widget_show(GTK_WIDGET(self->dl_connection));
 
-        usbconns_free_strings(texts, self->n_conns);
-}
-
-static void __window_impl_on_connect2local(GtkMenuItem* menuitem, gpointer user_data)
-{
-        struct window_impl* self = (struct window_impl*) user_data;
-
-        // Disconnect to the AVR device first.
-        usb_disconnect(&self->usb, self->public_ref->console);
+        // Clean up texts.
+        for (i = 0; i < connmgr_size(&self->conn_mgr); i ++) {
+                free(texts[i]);
+        }
+        free(texts);
 }
 
 // Help about.
@@ -199,8 +201,7 @@ static void __window_impl_on_help_about(GtkMenuItem* menuitem, gpointer user_dat
 static gboolean __window_impl_fetch_device_console(gpointer user_data)
 {
         struct window_impl* self = (struct window_impl*) user_data;
-        size_t n_bytes;
-        char* msg = usb_fetch_console_string(&self->usb, &n_bytes);
+        char* msg = self->curr_conn != nullptr ? conn_gets(self->curr_conn) : nullptr;
         if (msg != nullptr)
                 console_log(self->public_ref->console, ConsoleLogNormal, "device: %s", msg), free(msg);
         return TRUE;
@@ -208,11 +209,7 @@ static gboolean __window_impl_fetch_device_console(gpointer user_data)
 
 static gboolean __window_impl_capture_device(GtkButton* button, gpointer user_data)
 {
-        struct window_impl* self = (struct window_impl*) user_data;
-        size_t n_bytes;
-        char* msg = usb_capture(&self->usb, &n_bytes);
-        if (msg != nullptr)
-                console_log(self->public_ref->console, ConsoleLogNormal, "device: %s", msg), free(msg);
+        // struct window_impl* self = (struct window_impl*) user_data;
         return TRUE;
 }
 /******************* Callback controllers *******************/
@@ -316,19 +313,12 @@ void window_run(struct window* self)
                         g_signal_connect(G_OBJECT(mi_scan_conn), "activate",
                                          G_CALLBACK(__window_impl_on_scan_connections), self->pimpl);
                 }
-                GtkMenuItem* mi_conn2avr = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-connect2avr");
-                if (mi_conn2avr == nullptr) {
+                GtkMenuItem* mi_conn2dev = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-connect2device");
+                if (mi_conn2dev == nullptr) {
                         console_log(self->console, ConsoleLogSevere, "Cannot load connect-to-avr menu item.");
                 } else {
-                        g_signal_connect(G_OBJECT(mi_conn2avr), "activate",
-                                         G_CALLBACK(__window_impl_on_connect2avr), self->pimpl);
-                }
-                GtkMenuItem* mi_conn2local = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-connect2local");
-                if (mi_conn2local == nullptr) {
-                        console_log(self->console, ConsoleLogSevere, "Cannot load connect-to-local menu item.");
-                } else {
-                        g_signal_connect(G_OBJECT(mi_conn2local), "activate",
-                                         G_CALLBACK(__window_impl_on_connect2local), self->pimpl);
+                        g_signal_connect(G_OBJECT(mi_conn2dev), "activate",
+                                         G_CALLBACK(__window_impl_on_connect2dev), self->pimpl);
                 }
                 GtkMenuItem* mi_helpabout = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-helpabout");
                 if (mi_helpabout == nullptr) {

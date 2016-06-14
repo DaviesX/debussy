@@ -1,6 +1,0 @@
-#ifndef CONNMGR_H_INCLUDED
-#define CONNMGR_H_INCLUDED
-
-
-
-#endif // CONNMGR_H_INCLUDED
