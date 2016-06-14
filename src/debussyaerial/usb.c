@@ -91,15 +91,11 @@ void usbconns_free_strings(char** strings, int n_conns)
  */
 void usb_init(struct usb* self)
 {
-        memset(self, 0, sizeof(*self));
-        self->udev_ctx = udev_new();
         self->is_connected = false;
 }
 
 void usb_free(struct usb* self)
 {
-        if (self->udev_ctx != nullptr)
-                udev_unref(self->udev_ctx);
         memset(self, 0, sizeof(*self));
 }
 
@@ -107,13 +103,14 @@ struct usb_connection* usb_scan_connections(const struct usb* self, int* num_con
 {
         *num_conns = 0;
 
-        if (!self->udev_ctx) {
+        struct udev* udev_ctx = udev_new();
+        if (!udev_ctx) {
                 console_log(console, ConsoleLogSevere, "udev context is invalid. Failed to scan connections.");
                 return nullptr;
         }
 
         // Enumerate devices that are in the hidraw subsystem.
-        struct udev_enumerate* enumerate = udev_enumerate_new(self->udev_ctx);
+        struct udev_enumerate* enumerate = udev_enumerate_new(udev_ctx);
         udev_enumerate_add_match_subsystem(enumerate, "hidraw");
         udev_enumerate_scan_devices(enumerate);
         struct udev_list_entry* first_devent = udev_enumerate_get_list_entry(enumerate);
@@ -125,7 +122,7 @@ struct usb_connection* usb_scan_connections(const struct usb* self, int* num_con
         for (devent = first_devent; devent != nullptr; devent = udev_list_entry_get_next(devent)) {
                 // Get device path.
                 const char* path = udev_list_entry_get_name(devent);
-                struct udev_device* dev = udev_device_new_from_syspath(self->udev_ctx, path);
+                struct udev_device* dev = udev_device_new_from_syspath(udev_ctx, path);
 
                 // Get device node path.
                 const char* node_path = udev_device_get_devnode(dev);
@@ -156,6 +153,8 @@ struct usb_connection* usb_scan_connections(const struct usb* self, int* num_con
                 usbconn_init(&conns[n_devs - 1], combined_id, product_name, manufacturer, node_path);
         }
         udev_enumerate_unref(enumerate);
+        udev_unref(udev_ctx);
+
         *num_conns = n_devs;
         return conns;
 }
