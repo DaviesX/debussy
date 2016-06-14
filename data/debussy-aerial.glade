@@ -141,18 +141,10 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="mi-connect2avr">
+                      <object class="GtkMenuItem" id="mi-connect2device">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Connect to avr</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mi-connect2local">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Connect to local</property>
+                        <property name="label" translatable="yes">Connect to device</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>
