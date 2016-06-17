@@ -21,9 +21,11 @@
 #  define uint_farptr_t uint32_t
 #  define true          1
 #  define false         0
+#  include <stddef.h>
 #else
 #  include <stdint.h>
 #  include <stdbool.h>
+#  include <stddef.h>
 #endif // ARCH_X86_64
 
 
