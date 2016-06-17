@@ -48,17 +48,52 @@ static const char* __to_absolute_path(const char* cwd, const char* rel_path)
 }
 
 /*
- * <directory> public
+ * <fs_entity> decl
  */
-void dir_init(struct directory* self, const char* path, uint8_t type)
+void fs_entity_init(struct fs_entity* self, const char* path, uint8_t type)
 {
         self->type = type;
         self->path = (char*) path;
 }
 
-void dir_free(struct directory* self)
+void fs_entity_free(struct fs_entity* self)
 {
 }
+
+/*
+ * <directory> public
+ */
+void dir_init(struct directory* self, const char* path,
+              f_Dir_Free f_free,
+              f_Dir_First f_first,
+              f_Dir_Next f_next)
+{
+        memset(self, 0, sizeof(*self));
+        fs_entity_init(&self->__parent, path, FsEntityDirectory);
+
+        self->f_free = f_free;
+        self->f_first = f_first;
+        self->f_next = f_next;
+}
+
+void dir_free(struct directory* self)
+{
+        self->f_free(self);
+
+        fs_entity_free(&self->__parent);
+        memset(self, 0, sizeof(*self));
+}
+
+void dir_first(struct directory* self, struct fs_entity* ent)
+{
+        self->f_first(self, ent);
+}
+
+void dir_next(struct directory* self, struct fs_entity* ent)
+{
+        self->f_next(self, ent);
+}
+
 
 /*
  * <file> public
@@ -69,7 +104,7 @@ void file_init(struct file* self, const char* path,
                f_File_Write f_write,
                f_File_Seek f_seek)
 {
-        dir_init(&self->__parent, path, DirectoryFile);
+        fs_entity_init(&self->__parent, path, FsEntityFile);
         self->f_free = f_free;
         self->f_read = f_read;
         self->f_write = f_write;
@@ -212,48 +247,118 @@ bool filesys_remove_file(struct filesystem* self, struct file* file)
 
 void filesys_test_connect_directory()
 {
-        struct filesystem fs;
-        filesys_init(&fs, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-        filesys_connect_directory(&fs, "a/b/c/d");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/a/b/c/d", filesys_working_directory(&fs)));
+        struct filesystem* fs = &fs_posix_create(".")->__parent;
 
-        filesys_connect_directory(&fs, ".");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/a/b/c/d", filesys_working_directory(&fs)));
+        filesys_connect_directory(fs, "a/b/c/d");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/a/b/c/d", filesys_working_directory(fs)));
 
-        filesys_connect_directory(&fs, "..");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/a/b/c", filesys_working_directory(&fs)));
+        filesys_connect_directory(fs, ".");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/a/b/c/d", filesys_working_directory(fs)));
 
-        filesys_connect_directory(&fs, "./");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/a/b/c", filesys_working_directory(&fs)));
+        filesys_connect_directory(fs, "..");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/a/b/c", filesys_working_directory(fs)));
 
-        filesys_connect_directory(&fs, "../");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/a/b", filesys_working_directory(&fs)));
+        filesys_connect_directory(fs, "./");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/a/b/c", filesys_working_directory(fs)));
 
-        filesys_connect_directory(&fs, "../e/g/../f");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/a/e/f", filesys_working_directory(&fs)));
+        filesys_connect_directory(fs, "../");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/a/b", filesys_working_directory(fs)));
 
-        filesys_connect_directory(&fs, "k/");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/a/e/f/k", filesys_working_directory(&fs)));
+        filesys_connect_directory(fs, "../e/g/../f");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/a/e/f", filesys_working_directory(fs)));
 
-        filesys_connect_directory(&fs, "../../../../../");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/", filesys_working_directory(&fs)));
+        filesys_connect_directory(fs, "k/");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/a/e/f/k", filesys_working_directory(fs)));
 
-        filesys_connect_directory(&fs, "/a/e/f/k");
-        filesys_connect_directory(&fs, "../");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/a/e/f", filesys_working_directory(&fs)));
+        filesys_connect_directory(fs, "../../../../../");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/", filesys_working_directory(fs)));
 
-        filesys_connect_directory(&fs, "/1/2/3/4/5/6");
-        printf("dir: %s\n", filesys_working_directory(&fs));
-        assert(!strcmp("/1/2/3/4/5/6", filesys_working_directory(&fs)));
+        filesys_connect_directory(fs, "/a/e/f/k");
+        filesys_connect_directory(fs, "../");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/a/e/f", filesys_working_directory(fs)));
 
-        filesys_free(&fs);
+        filesys_connect_directory(fs, "/1/2/3/4/5/6");
+        printf("dir: %s\n", filesys_working_directory(fs));
+        assert(!strcmp("/1/2/3/4/5/6", filesys_working_directory(fs)));
+
+        filesys_free(fs), free(fs);
+}
+
+
+/*
+ * <fs_posix> public
+ */
+struct fs_posix* fs_posix_create(const char* base)
+{
+        struct fs_posix* self = malloc(sizeof(*self));
+        fs_posix_init(self, base);
+        return self;
+}
+
+void fs_posix_init(struct fs_posix* self, const char* base)
+{
+        memset(self, 0, sizeof(*self));
+        self->base = strdup(base);
+        filesys_init(&self->__parent, FileSysPOSIX,
+                     (f_Filesys_Free) fs_posix_free,
+                     (f_Filesys_Open_Directory) fs_posix_open_directory,
+                     (f_Filesys_Close_Directory) fs_posix_close_directory,
+                     (f_Filesys_Remove_Directory) fs_posix_remove_directory,
+                     (f_Filesys_List_Directory) fs_posix_list_directory,
+                     (f_Filesys_Open_File) fs_posix_open_file,
+                     (f_Filesys_Close_File) fs_posix_close_file,
+                     (f_Filesys_Remove_File) fs_posix_remove_file);
+}
+
+void fs_posix_free(struct fs_posix* self)
+{
+        free(self->base);
+        memset(self, 0, sizeof(*self));
+}
+
+struct directory* fs_posix_open_directory(struct fs_posix* self, const char* path, bool is_2create)
+{
+        abort();
+}
+
+void fs_posix_close_directory(struct fs_posix* self, struct directory* dir)
+{
+        abort();
+}
+
+bool fs_posix_remove_directory(struct fs_posix* self, struct directory* dir)
+{
+        abort();
+}
+
+void fs_posix_list_directory(struct fs_posix* self,
+                             const char* path, uint8_t depth, uint8_t type_filter,
+                             f_FileSys_Visit f_visit, void* user_data)
+{
+        abort();
+}
+
+
+struct file* fs_posix_open_file(struct fs_posix* self, const char* file_path, bool is_2create)
+{
+        abort();
+}
+
+void fs_posix_close_file(struct fs_posix* self, struct file* file)
+{
+        abort();
+}
+
+bool fs_posix_remove_file(struct fs_posix* self, struct file* file)
+{
+        abort();
 }
