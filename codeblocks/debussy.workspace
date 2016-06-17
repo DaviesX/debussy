@@ -16,7 +16,7 @@
 		</Project>
 		<Project filename="debussy64.cbp" />
 		<Project filename="utests.cbp">
-			<Depends filename="debussy.cbp" />
+			<Depends filename="debussy64.cbp" />
 		</Project>
 		<Project filename="utestavr.cbp">
 			<Depends filename="debussy.cbp" />
