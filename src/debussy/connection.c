@@ -16,8 +16,8 @@
 void conn_init(struct connection* self, struct console* console, const char* id, uint8_t type,
                f_Conn_Free f_free,
                f_Conn_Connect_To f_connect_to,
-               f_Conn_Is_Connected f_is_connected,
                f_Conn_Disconnect f_disconnect,
+               f_Conn_Is_Connected f_is_connected,
                f_Conn_Get_Action f_get_action,
                f_Conn_Puts f_puts,
                f_Conn_Gets f_gets,
@@ -64,7 +64,7 @@ bool conn_disconnect(struct connection* self)
         return self->f_disconnect(self);
 }
 
-bool conn_is_connected(struct connection* self)
+bool conn_is_connected(const struct connection* self)
 {
         return self->f_is_connected(self);
 }
@@ -79,7 +79,7 @@ void conn_puts(struct connection* self, const char* s)
         self->f_puts(self, s);
 }
 
-char* conn_gets(struct connection* self)
+const char* conn_gets(struct connection* self)
 {
         return self->f_gets(self);
 }
@@ -114,7 +114,7 @@ void conn_get_audio_player_state(struct connection* self, struct audioplayer_sta
         self->f_get_audio_player_state(self, aps);
 }
 
-char* conn_2string(struct connection* self)
+const char* conn_2string(const struct connection* self)
 {
         return self->f_2string(self);
 }
@@ -168,7 +168,7 @@ bool conn_a2h_disconnect(struct conn_a2h* self)
         return true;
 }
 
-bool conn_a2h_is_connected(struct conn_a2h* self)
+bool conn_a2h_is_connected(const struct conn_a2h* self)
 {
         return hidusb_is_connected();
 }
@@ -191,7 +191,7 @@ void conn_a2h_puts(struct conn_a2h* self, const char* s)
         hidusb_put_request(&request);
 }
 
-char* conn_a2h_gets(struct conn_a2h* self)
+const char* conn_a2h_gets(struct conn_a2h* self)
 {
         abort();
 }
@@ -226,7 +226,7 @@ void conn_a2h_get_audio_player_state(struct conn_a2h* self, struct audioplayer_s
         abort();
 }
 
-char* conn_a2h_2string(struct conn_a2h* self)
+const char* conn_a2h_2string(const struct conn_a2h* self)
 {
         return "";
 }
@@ -316,13 +316,13 @@ bool conn_h2a_connect_to(struct conn_h2a* self)
         conn_h2a_disconnect(self);
 
         // Open new device.
-        char* conn_str = conn_h2a_2string(self);
+        const char* conn_str = conn_h2a_2string(self);
         if (0 > (self->fd = open(self->dev_node_path, O_RDWR | O_NONBLOCK))) {
-                console_log(console, ConsoleLogSevere, "Failed to open device %s", conn_str), free(conn_str);
+                console_log(console, ConsoleLogSevere, "Failed to open device %s", conn_str), free((void*) conn_str);
                 console_log(console, ConsoleLogSevere, "Cause: %s", strerror(errno));
                 return false;
         } else {
-                console_log(console, ConsoleLogSevere, "Successfully opened device %s", conn_str), free(conn_str);
+                console_log(console, ConsoleLogSevere, "Successfully opened device %s", conn_str), free((void*) conn_str);
                 return true;
         }
 }
@@ -336,19 +336,18 @@ bool conn_h2a_disconnect(struct conn_h2a* self)
                 return true;
         }
         // Close old file descriptor.
-        char* conn_str = conn_h2a_2string(self);
-        if (0 > close(self->fd))
-        {
-                console_log(console, ConsoleLogSevere, "Failed to close device %s", conn_str), free(conn_str);
+        const char* conn_str = conn_h2a_2string(self);
+        if (0 > close(self->fd)) {
+                console_log(console, ConsoleLogSevere, "Failed to close device %s", conn_str), free((void*) conn_str);
                 console_log(console, ConsoleLogSevere, "Cause: %s", strerror(errno));
                 return false;
         } else {
-                console_log(console, ConsoleLogSevere, "Successfully closed device %s", conn_str), free(conn_str);
+                console_log(console, ConsoleLogSevere, "Successfully closed device %s", conn_str), free((void*) conn_str);
                 return true;
         }
 }
 
-bool conn_h2a_is_connected(struct conn_h2a* self)
+bool conn_h2a_is_connected(const struct conn_h2a* self)
 {
         return self->fd >= 0;
 }
@@ -363,7 +362,7 @@ void conn_h2a_puts(struct conn_h2a* self, const char* s)
         abort();
 }
 
-char* conn_h2a_gets(struct conn_h2a* self)
+const char* conn_h2a_gets(struct conn_h2a* self)
 {
         if (!conn_h2a_is_connected(self))
                 return nullptr;
@@ -415,7 +414,7 @@ void conn_h2a_get_audio_player_state(struct conn_h2a* self, struct audioplayer_s
         abort();
 }
 
-char* conn_h2a_2string(struct conn_h2a* self)
+const char* conn_h2a_2string(const struct conn_h2a* self)
 {
         int len = strlen(self->vender_id) +
                   strlen(self->name) +
@@ -432,32 +431,72 @@ char* conn_h2a_2string(struct conn_h2a* self)
  */
 struct conn_local* conn_local_create(struct console* console, struct filesystem* base)
 {
-        abort();
+        struct conn_local* self = malloc(sizeof(*self));
+        if (conn_local_init(self, console, base))
+                return self;
+        else {
+                free(self);
+                return nullptr;
+        }
 }
 
-bool conn_local_init(struct conn_local* self, struct filesystem* base)
+bool conn_local_init(struct conn_local* self, struct console* console, struct filesystem* base)
 {
-        abort();
+        if (base) {
+                memset(self, 0, sizeof(*self));
+                self->base = base;
+                self->is_connected = false;
+
+                const char* base_id = filesys_2string(base);
+                conn_init(&self->__parent, console, base_id, ConnectionHostLocal,
+                          (f_Conn_Free) conn_local_free,
+                          (f_Conn_Connect_To) conn_local_connect_to,
+                          (f_Conn_Disconnect) conn_local_disconnect,
+                          (f_Conn_Is_Connected) conn_local_is_connected,
+                          (f_Conn_Get_Action) conn_local_get_action,
+                          (f_Conn_Puts) conn_local_puts,
+                          (f_Conn_Gets) conn_local_gets,
+                          (f_Conn_Put_Directory_Structure) conn_local_put_directory_structure,
+                          (f_Conn_Get_Directory_Structure) conn_local_get_directory_structure,
+                          (f_Conn_Put_File)conn_local_put_file,
+                          (f_Conn_Get_File) conn_local_get_file,
+                          (f_Conn_Put_Audio_Player_State) conn_local_put_audio_player_state,
+                          (f_Conn_Get_Audio_Player_State) conn_local_get_audio_player_state,
+                          (f_Conn_2string) conn_local_2string);
+                free((void*) base_id);
+                return true;
+        } else
+                return false;
 }
 
 void conn_local_free(struct conn_local* self)
 {
-        abort();
+        memset(self, 0, sizeof(*self));
 }
 
 bool conn_local_connect_to(struct conn_local* self)
 {
-        abort();
+        struct console* console = self->__parent.console;
+
+        self->is_connected = true;
+        const char* msg = filesys_2string(self->base);
+        console_log(console, ConsoleLogNormal, "Has been connected to local device %s", msg), free((void*) msg);
+        return true;
 }
 
 bool conn_local_disconnect(struct conn_local* self)
 {
-        abort();
+        struct console* console = self->__parent.console;
+
+        self->is_connected = false;
+        const char* msg = filesys_2string(self->base);
+        console_log(console, ConsoleLogNormal, "Disconnected to local device %s", msg), free((void*) msg);
+        return true;
 }
 
-bool conn_local_is_connected(struct conn_local* self)
+bool conn_local_is_connected(const struct conn_local* self)
 {
-        abort();
+        return self->is_connected;
 }
 
 struct action_protocol* conn_local_get_action(struct conn_local* self, bool is_blocking)
@@ -467,12 +506,11 @@ struct action_protocol* conn_local_get_action(struct conn_local* self, bool is_b
 
 void conn_local_puts(struct conn_local* self, const char* s)
 {
-        abort();
 }
 
-char* conn_local_gets(struct conn_local* self)
+const char* conn_local_gets(struct conn_local* self)
 {
-        abort();
+        return nullptr;
 }
 
 void conn_local_put_directory_structure(struct conn_local* self, struct directory* src)
@@ -505,9 +543,9 @@ void conn_local_get_audio_player_state(struct conn_local* self, struct audioplay
         abort();
 }
 
-char* conn_local_2string(struct conn_local* self)
+const char* conn_local_2string(const struct conn_local* self)
 {
-        abort();
+        return filesys_2string(self->base);
 }
 
 #endif  // ARCH_X86_64
