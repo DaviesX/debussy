@@ -46,10 +46,11 @@ void app_run(struct app* self);
 void            __app_push_status(struct app* self, const char* status);
 void            __app_pop_status(struct app* self);
 void            __app_update(struct app* self);
-int             ____app_show_message_box(const char* title, const char* message, const GtkMessageType type, GtkWindow* parent);
+int             __app_show_message_box(const char* title, const char* message, const GtkMessageType type, GtkWindow* parent);
 void            __app_on_scan_connections(GtkMenuItem* menuitem, gpointer user_data);
 void            __app_on_conn_confirm(GtkButton* button, gpointer user_data);
 void            __app_on_connect2dev(GtkMenuItem* menuitem, gpointer user_data);
+void            __app_on_add_local_device(GtkMenuItem* menuitem, gpointer user_data);
 void            __app_on_help_about(GtkMenuItem* menuitem, gpointer user_data);
 gboolean        __app_fetch_device_console(gpointer user_data);
 gboolean        __app_capture_device(GtkButton* button, gpointer user_data);
@@ -125,8 +126,13 @@ int __app_show_message_box(const char* title, const char* message, const GtkMess
 void __app_on_scan_connections(GtkMenuItem* menuitem, gpointer user_data)
 {
         struct app* self = (struct app*) user_data;
-        // Refresh connections.
+        // Cache our current connection information,
+        // then refresh all the AVR connections and retain the connect afterwards.
+        char id[64] = {0};
+        if (self->curr_conn)
+                strcpy(id, self->curr_conn->id);
         connmgr_add_scanned_avr_connections(&self->conn_mgr, self->console);
+        self->curr_conn = connmgr_get_connection(&self->conn_mgr, id);
 }
 
 void __app_on_conn_confirm(GtkButton* button, gpointer user_data)
@@ -183,7 +189,8 @@ void __app_on_connect2dev(GtkMenuItem* menuitem, gpointer user_data)
         // Run selection dialog.
         g_signal_connect(self->bt_conn_confirm, "clicked", G_CALLBACK(__app_on_conn_confirm), self);
         g_signal_connect(self->bt_conn_cancel, "clicked", G_CALLBACK(__app_on_conn_confirm), self);
-        gtk_widget_show(GTK_WIDGET(self->dl_connection));
+        g_signal_connect_swapped(self->dl_connection, "response", G_CALLBACK(gtk_widget_hide), self->dl_connection);
+        gtk_dialog_run(self->dl_connection);
 
         // Clean up texts.
         for (i = 0; i < connmgr_size(&self->conn_mgr); i ++) {
@@ -192,10 +199,15 @@ void __app_on_connect2dev(GtkMenuItem* menuitem, gpointer user_data)
         free(texts);
 }
 
+void __app_on_add_local_device(GtkMenuItem* menuitem, gpointer user_data)
+{
+}
+
 // Help about.
 void __app_on_help_about(GtkMenuItem* menuitem, gpointer user_data)
 {
         struct app* self = (struct app*) user_data;
+        g_signal_connect_swapped(self->dl_helpabout, "response", G_CALLBACK(gtk_widget_hide), self->dl_helpabout);
         gtk_dialog_run(self->dl_helpabout);
 }
 
