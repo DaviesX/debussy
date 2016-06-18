@@ -3,6 +3,7 @@
 #include <gtk/gtk.h>
 #include <aerial.h>
 #include <console.h>
+#include <filesystem.h>
 #include <connection.h>
 #include <connmgr.h>
 
@@ -19,7 +20,7 @@ struct app {
 
         GtkWindow*              win_frame;
         GtkStatusbar*           sb_status;
-        GtkDialog*              dl_helpabout;
+        GtkAboutDialog*         dl_helpabout;
         GtkDialog*              dl_connection;
         GtkComboBoxText*        cb_selected;
         GtkButton*              bt_conn_confirm;
@@ -107,17 +108,37 @@ int __app_show_message_box(const char* title, const char* message, const GtkMess
         gtk_window_set_title(GTK_WINDOW(dialog), title);
         gtk_window_set_modal(GTK_WINDOW(dialog), false);
         gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
-        gtk_widget_show_all(dialog);
+        gtk_dialog_run(GTK_DIALOG(dialog));
         if (type == GTK_MESSAGE_QUESTION) {
                 gint ans = gtk_dialog_run(GTK_DIALOG (dialog));
                 gtk_widget_destroy(dialog);
                 return ans;
         } else {
-                g_signal_connect_swapped(dialog, "response",
-                                         G_CALLBACK (gtk_widget_destroy),
-                                         dialog);
+                gtk_widget_destroy(dialog);
                 return 0;
         }
+}
+
+const char* __app_show_file_chooser(const char* title, GtkFileChooserAction action, GtkWindow* parent)
+{
+        GtkWidget *dialog;
+        gint res;
+
+        dialog = gtk_file_chooser_dialog_new(title, parent, action,
+                                             "_Cancel", GTK_RESPONSE_CANCEL,
+                                             "_Open", GTK_RESPONSE_ACCEPT,
+                                             nullptr);
+
+        res = gtk_dialog_run(GTK_DIALOG(dialog));
+
+        const char* filename;
+        if (res == GTK_RESPONSE_ACCEPT)
+                filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        else
+                filename = nullptr;
+        gtk_widget_destroy(dialog);
+
+        return filename;
 }
 /******************* GUI utils *******************/
 
@@ -131,8 +152,18 @@ void __app_on_scan_connections(GtkMenuItem* menuitem, gpointer user_data)
         char id[64] = {0};
         if (self->curr_conn)
                 strcpy(id, self->curr_conn->id);
-        connmgr_add_scanned_avr_connections(&self->conn_mgr, self->console);
+        connmgr_add_scanned_avr_connections(&self->conn_mgr, nullptr);
         self->curr_conn = connmgr_get_connection(&self->conn_mgr, id);
+
+        console_log(self->console, ConsoleLogNormal, "List of devices >");
+        const char** texts = connmgr_2strings(&self->conn_mgr);
+        const struct connection** conns = connmgr_get_all_connections(&self->conn_mgr);
+        int i;
+        for (i = 0; i < connmgr_size(&self->conn_mgr); i ++) {
+                console_log(self->console, ConsoleLogNormal, "Device ID > %s\n\t%s", conns[i]->id, texts[i]);
+                free((void*) texts[i]);
+        }
+        free((void*) texts);
 }
 
 void __app_on_conn_confirm(GtkButton* button, gpointer user_data)
@@ -143,10 +174,10 @@ void __app_on_conn_confirm(GtkButton* button, gpointer user_data)
                                               gtk_combo_box_get_active_id(GTK_COMBO_BOX(self->cb_selected)));
                 if (conn) {
                         char msg[256];
-                        char* conn_str = conn_2string(conn);
+                        const char* conn_str = conn_2string(conn);
 
                         if (!conn_connect_to(conn)) {
-                                sprintf(msg, "Connection %s cannot be established", conn_str), free(conn_str);
+                                sprintf(msg, "Connection %s cannot be established", (char*) conn_str), free((void*) conn_str);
                                 __app_show_message_box(AERIAL_VERSION_STRING, msg,
                                                                GTK_MESSAGE_ERROR, self->win_frame);
                         } else {
@@ -156,7 +187,7 @@ void __app_on_conn_confirm(GtkButton* button, gpointer user_data)
                                         conn_disconnect(self->curr_conn);
                                 }
                                 self->curr_conn = conn;
-                                sprintf(msg, "Has been connected to %s", conn_str), free(conn_str);
+                                sprintf(msg, "Has been connected to %s", (char*) conn_str), free((void*) conn_str);
                                 __app_show_message_box(AERIAL_VERSION_STRING, msg,
                                                                GTK_MESSAGE_INFO, self->win_frame);
                                 gtk_widget_hide(GTK_WIDGET(self->dl_connection));
@@ -178,7 +209,7 @@ void __app_on_connect2dev(GtkMenuItem* menuitem, gpointer user_data)
         __app_on_scan_connections(menuitem, user_data);
 
         // Initialize selection box.
-        char** texts = connmgr_2strings(&self->conn_mgr);
+        const char** texts = connmgr_2strings(&self->conn_mgr);
         const struct connection** conns = connmgr_get_all_connections(&self->conn_mgr);
         gtk_combo_box_text_remove_all(self->cb_selected);
         int i;
@@ -191,16 +222,33 @@ void __app_on_connect2dev(GtkMenuItem* menuitem, gpointer user_data)
         g_signal_connect(self->bt_conn_cancel, "clicked", G_CALLBACK(__app_on_conn_confirm), self);
         g_signal_connect_swapped(self->dl_connection, "response", G_CALLBACK(gtk_widget_hide), self->dl_connection);
         gtk_dialog_run(self->dl_connection);
+        g_signal_handlers_disconnect_by_func(self->bt_conn_confirm, G_CALLBACK(__app_on_conn_confirm), self);
+        g_signal_handlers_disconnect_by_func(self->bt_conn_cancel, G_CALLBACK(__app_on_conn_confirm), self);
 
         // Clean up texts.
         for (i = 0; i < connmgr_size(&self->conn_mgr); i ++) {
-                free(texts[i]);
+                free((void*) texts[i]);
         }
-        free(texts);
+        free((void*) texts);
 }
 
 void __app_on_add_local_device(GtkMenuItem* menuitem, gpointer user_data)
 {
+        struct app* self = (struct app*) user_data;
+
+        const char* filename = __app_show_file_chooser("Add local device",
+                                                       GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                                       self->win_frame);
+        if (filename) {
+                console_log(self->console, ConsoleLogNormal, "Connecting to local device %s", filename);
+                struct filesystem* fs = (struct filesystem*) fs_posix_create(filename);
+                if (fs)
+                        connmgr_add_local_connection(&self->conn_mgr, fs, self->console);
+                else
+                        console_log(self->console, ConsoleLogSevere,
+                                   "Failed to form a posix file system on the device %s", filename);
+                g_free((void*) filename);
+        }
 }
 
 // Help about.
@@ -208,16 +256,16 @@ void __app_on_help_about(GtkMenuItem* menuitem, gpointer user_data)
 {
         struct app* self = (struct app*) user_data;
         g_signal_connect_swapped(self->dl_helpabout, "response", G_CALLBACK(gtk_widget_hide), self->dl_helpabout);
-        gtk_dialog_run(self->dl_helpabout);
+        gtk_dialog_run(GTK_DIALOG(self->dl_helpabout));
 }
 
 // Device access.
 gboolean __app_fetch_device_console(gpointer user_data)
 {
         struct app* self = (struct app*) user_data;
-        char* msg = self->curr_conn != nullptr ? conn_gets(self->curr_conn) : nullptr;
+        const char* msg = self->curr_conn != nullptr ? conn_gets(self->curr_conn) : nullptr;
         if (msg != nullptr)
-                console_log(self->console, ConsoleLogNormal, "device: %s", msg), free(msg);
+                console_log(self->console, ConsoleLogNormal, "device: %s", (char*) msg), free((void*) msg);
         return TRUE;
 }
 
@@ -327,6 +375,13 @@ void app_run(struct app* self)
                         g_signal_connect(G_OBJECT(mi_conn2dev), "activate",
                                          G_CALLBACK(__app_on_connect2dev), self);
                 }
+                GtkMenuItem* mi_conn2localdev = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-add-local-dev");
+                if (mi_conn2localdev == nullptr) {
+                        console_log(self->console, ConsoleLogSevere, "Cannot load add-local-device menu item.");
+                } else {
+                        g_signal_connect(G_OBJECT(mi_conn2localdev), "activate",
+                                         G_CALLBACK(__app_on_add_local_device), self);
+                }
                 GtkMenuItem* mi_helpabout = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-helpabout");
                 if (mi_helpabout == nullptr) {
                         console_log(self->console, ConsoleLogSevere, "Cannot load help about menu item.");
@@ -345,7 +400,7 @@ void app_run(struct app* self)
                 }
 
                 // Load impl UIs and connect signals.
-                GtkDialog* dl_helpabout = (GtkDialog*) gtk_builder_get_object(builder, "dl-helpabout");
+                GtkAboutDialog* dl_helpabout = (GtkAboutDialog*) gtk_builder_get_object(builder, "dl-helpabout");
                 GtkDialog* dl_conn = (GtkDialog*) gtk_builder_get_object(builder, "dl-connection");
                 GtkComboBoxText* cb_selected = (GtkComboBoxText*) gtk_builder_get_object(builder, "cb-conn-selected");
                 GtkButton* bt_conn_confirm = (GtkButton*) gtk_builder_get_object(builder, "bt-conn-confirm");
