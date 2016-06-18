@@ -80,6 +80,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/console.h" />
+		<Unit filename="../src/debussy/container/set.h" />
 		<Unit filename="../src/debussy/dac.c">
 			<Option compilerVar="CC" />
 		</Unit>

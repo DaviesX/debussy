@@ -53,11 +53,17 @@ static const char* __to_absolute_path(const char* cwd, const char* rel_path)
 void fs_entity_init(struct fs_entity* self, const char* path, uint8_t type)
 {
         self->type = type;
-        self->path = (char*) path;
+        self->path = strcpy(malloc(strlen(path) + 1), path);
 }
 
 void fs_entity_free(struct fs_entity* self)
 {
+        free(self->path);
+}
+
+const char* fs_entity_get_path(struct fs_entity* self)
+{
+        return self->path;
 }
 
 /*
@@ -84,14 +90,19 @@ void dir_free(struct directory* self)
         memset(self, 0, sizeof(*self));
 }
 
-void dir_first(struct directory* self, struct fs_entity* ent)
+const char* dir_get_path(struct directory* self)
 {
-        self->f_first(self, ent);
+        return fs_entity_get_path(&self->__parent);
 }
 
-void dir_next(struct directory* self, struct fs_entity* ent)
+bool dir_first(struct directory* self, struct fs_entity* ent)
 {
-        self->f_next(self, ent);
+        return self->f_first(self, ent);
+}
+
+bool dir_next(struct directory* self, struct fs_entity* ent)
+{
+        return self->f_next(self, ent);
 }
 
 
@@ -104,6 +115,7 @@ void file_init(struct file* self, const char* path,
                f_File_Write f_write,
                f_File_Seek f_seek)
 {
+        memset(self, 0, sizeof(*self));
         fs_entity_init(&self->__parent, path, FsEntityFile);
         self->f_free = f_free;
         self->f_read = f_read;
@@ -114,14 +126,22 @@ void file_init(struct file* self, const char* path,
 void file_free(struct file* self)
 {
         self->f_free(self);
+
+        fs_entity_free(&self->__parent);
+        memset(self, 0, sizeof(*self));
 }
 
-size_t file_read(struct file* self, size_t num_bytes, const void* buf)
+const char* file_get_path(struct file* self)
+{
+        return fs_entity_get_path(&self->__parent);
+}
+
+size_t file_read(struct file* self, size_t num_bytes, void* buf)
 {
         return self->f_read(self, num_bytes, buf);
 }
 
-size_t file_write(struct file* self, size_t num_bytes, void* buf)
+size_t file_write(struct file* self, size_t num_bytes, const void* buf)
 {
         return self->f_write(self, num_bytes, buf);
 }
@@ -248,6 +268,13 @@ void filesys_test_connect_directory()
 #else
         struct filesystem* fs = &fs_posix_create(".")->__parent;
 #endif // ARCH_X86_64
+        struct directory* dir;
+        if (!(dir = filesys_open_directory(fs, "/a/b/c/d", true))) {
+                printf("failed to create directory\n");
+                abort();
+        }
+        filesys_close_directory(fs, dir);
+
         filesys_connect_directory(fs, "a/b/c/d");
         printf("dir: %s\n", filesys_working_directory(fs));
         assert(!strcmp("/a/b/c/d", filesys_working_directory(fs)));
@@ -268,10 +295,12 @@ void filesys_test_connect_directory()
         printf("dir: %s\n", filesys_working_directory(fs));
         assert(!strcmp("/a/b", filesys_working_directory(fs)));
 
+        filesys_open_directory(fs, "/a/e/f", true);
         filesys_connect_directory(fs, "../e/g/../f");
         printf("dir: %s\n", filesys_working_directory(fs));
         assert(!strcmp("/a/e/f", filesys_working_directory(fs)));
 
+        filesys_open_directory(fs, "/a/e/f/k", true);
         filesys_connect_directory(fs, "k/");
         printf("dir: %s\n", filesys_working_directory(fs));
         assert(!strcmp("/a/e/f/k", filesys_working_directory(fs)));
@@ -285,6 +314,10 @@ void filesys_test_connect_directory()
         printf("dir: %s\n", filesys_working_directory(fs));
         assert(!strcmp("/a/e/f", filesys_working_directory(fs)));
 
+        struct directory* dir2 = filesys_open_directory(fs, "/a", false);
+        filesys_remove_directory(fs, dir2);
+
+        filesys_open_directory(fs, "/1/2/3/4/5/6/", true);
         filesys_connect_directory(fs, "/1/2/3/4/5/6");
         printf("dir: %s\n", filesys_working_directory(fs));
         assert(!strcmp("/1/2/3/4/5/6", filesys_working_directory(fs)));
@@ -296,6 +329,13 @@ void filesys_test_connect_directory()
 #ifndef ARCH_X86_64
 
 #else
+#  include <errno.h>
+#  include <unistd.h>
+#  include <fcntl.h>
+#  include <dirent.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
+
 /*
  * <fs_posix> public
  */
@@ -309,7 +349,11 @@ struct fs_posix* fs_posix_create(const char* base)
 void fs_posix_init(struct fs_posix* self, const char* base)
 {
         memset(self, 0, sizeof(*self));
+
         self->base = strdup(base);
+        set_init(&self->open_files, 1, nullptr);
+        set_init(&self->open_dirs, 1, nullptr);
+
         filesys_init(&self->__parent, FileSysPOSIX,
                      (f_Filesys_Free) fs_posix_free,
                      (f_Filesys_Open_Directory) fs_posix_open_directory,
@@ -322,106 +366,291 @@ void fs_posix_init(struct fs_posix* self, const char* base)
 
 void fs_posix_free(struct fs_posix* self)
 {
+        struct file_posix* file;
+        set_for_each(&self->open_files, file,
+                fs_posix_close_file(self, file);
+        );
+        set_free(&self->open_files);
+
+        struct dir_posix* dir;
+        set_for_each(&self->open_dirs, dir,
+                fs_posix_close_directory(self, dir);
+        );
+        set_free(&self->open_dirs);
+
         free(self->base);
         memset(self, 0, sizeof(*self));
 }
 
-struct directory* fs_posix_open_directory(struct fs_posix* self, const char* path, bool is_2create)
+static const char* __fs_posix_get_full_path(struct fs_posix* self, const char* file_path)
 {
-        abort();
+        const char* cwd = filesys_working_directory(&self->__parent);
+        int l = strlen(file_path),
+            m = strlen(self->base),
+            n = strlen(cwd);
+        char* path;
+        path = strcpy(malloc(l + m + n + 2), self->base);
+        if (path[m - 1] == '/') m --;
+        if (file_path[0] != '/') {
+                // Relative path.
+                strcpy(&path[m], cwd);
+                path[m + n ++] = '/';
+        } else
+                // Absolute path.
+                n = 0;
+        strcpy(&path[m + n], file_path);
+        return path;
 }
 
-void fs_posix_close_directory(struct fs_posix* self, struct directory* dir)
+#define fs_entity_is_equal(__x, __y, __d)       (*(__x) == *(__y))
+#define fs_entity_hash(__x)                     (int_hash((uint64_t) (__x)))
+
+struct dir_posix* fs_posix_open_directory(struct fs_posix* self, const char* path, bool is_2create)
 {
-        abort();
+        const char* dir_path = __fs_posix_get_full_path(self, path);
+        struct dir_posix* dir;
+        if (nullptr != (dir = dir_posix_create(dir_path, is_2create))) {
+                set_iter_templ(struct dir_posix*) iter;
+                set_add(&self->open_dirs, dir, fs_entity_hash, fs_entity_is_equal, &iter);
+        }
+        free((void*) dir_path);
+        return dir;
 }
 
-bool fs_posix_remove_directory(struct fs_posix* self, struct directory* dir)
+void fs_posix_close_directory(struct fs_posix* self, struct dir_posix* dir)
 {
-        abort();
+        set_iter_templ(struct dir_posix*) iter;
+        set_find(&self->open_dirs, dir, fs_entity_hash, fs_entity_is_equal, &iter);
+        if (set_iter_has_next(&iter, &self->open_dirs)) {
+                // Valid directory.
+                dir_free(&dir->__parent), free(dir);
+                set_remove_at(&self->open_dirs, &iter);
+        } else
+                // Invalid pointer.
+                abort();
 }
 
-
-struct file* fs_posix_open_file(struct fs_posix* self, const char* file_path, bool is_2create)
+bool fs_posix_remove_directory(struct fs_posix* self, struct dir_posix* dir)
 {
-        abort();
+        char path[BUFSIZ];
+        strcpy(path, dir_get_path(&dir->__parent));
+        fs_posix_close_directory(self, dir);
+        return -1 != remove(path);
 }
 
-void fs_posix_close_file(struct fs_posix* self, struct file* file)
+struct file_posix* fs_posix_open_file(struct fs_posix* self, const char* file_path, bool is_2create)
 {
-        abort();
+        struct file_posix* file;
+        const char* path = __fs_posix_get_full_path(self, file_path);
+        if (nullptr != (file = file_posix_create(path, is_2create))) {
+                set_iter_templ(struct file_posix*) iter;
+                set_add(&self->open_files, file, fs_entity_hash, fs_entity_is_equal, &iter);
+        }
+        free((void*) path);
+        return file;
 }
 
-bool fs_posix_remove_file(struct fs_posix* self, struct file* file)
+void fs_posix_close_file(struct fs_posix* self, struct file_posix* file)
 {
-        abort();
+        set_iter_templ(struct file*) iter;
+        set_find(&self->open_files, file, fs_entity_hash, fs_entity_is_equal, &iter);
+        if (set_iter_has_next(&iter, &self->open_files)) {
+                // Valid file.
+                set_remove_at(&self->open_files, &iter);
+                file_free(&file->__parent), free(file);
+        } else
+                // Invalid pointer.
+                abort();
+}
+
+bool fs_posix_remove_file(struct fs_posix* self, struct file_posix* file)
+{
+        char path[BUFSIZ];
+        strcpy(path, file_get_path(&file->__parent));
+        fs_posix_close_file(self, file);
+        return -1 != remove(path);
 }
 
 /*
  * <dir_posix> public
  */
-struct dir_posix* dir_posix_create(const char* path)
+struct dir_posix* dir_posix_create(const char* path, bool is_2create)
 {
         struct dir_posix* self = malloc(sizeof(*self));
-        dir_posix_init(self, path);
-        return self;
+        if (dir_posix_init(self, path, is_2create))
+                return self;
+        else {
+                free(self);
+                return nullptr;
+        }
 }
 
-void dir_posix_init(struct dir_posix* self, const char* path)
+int mkpath(const char* file_path, mode_t mode)
+{
+        assert(file_path && *file_path);
+        char* last = strrchr(file_path, '\0');
+        char* p;
+        for (p = strchr(file_path + 1, '/'); ; p = (p = strchr(p + 1, '/')) == nullptr ? last : p) {
+                *p = '\0';
+                if (mkdir(file_path, mode) == -1) {
+                        if (errno != EEXIST) {
+                                *p = '/';
+                                return -1;
+                        }
+                }
+                if (p != last) *p = '/';
+                else break;
+        }
+        return 0;
+}
+
+bool dir_posix_init(struct dir_posix* self, const char* path, bool is_2create)
 {
         memset(self, 0, sizeof(*self));
+        struct stat sb;
+        if (!is_2create && (stat(path, &sb) != 0 || !S_ISDIR(sb.st_mode)))
+                // Directory doesn't exist or not a directory.
+                return false;
+
+        if (is_2create) {
+                // Create the directory immediately.
+                if (-1 == mkpath(path, 0755))
+                        return false;
+                self->ds = nullptr;
+        } else
+                // Lazy open policy.
+                self->ds = nullptr;
+        self->entry = nullptr;
+
         dir_init(&self->__parent, path,
                  (f_Dir_Free) dir_posix_free,
                  (f_Dir_First) dir_posix_first,
                  (f_Dir_Next) dir_posix_next);
+        return true;
 }
 
-void dir_posix_free(struct directory* self)
+void dir_posix_free(struct dir_posix* self)
 {
+        if (self->ds)
+                closedir(self->ds);
 }
 
-void dir_posix_first(struct directory* self, struct fs_entity* ent)
+static void __dir_posix_fill_fs_entity(struct dir_posix* self, struct fs_entity* ent)
 {
+        const char* path = dir_get_path(&self->__parent);
+
+        char buf[BUFSIZ];
+        int l = strlen(path);
+        strcpy(buf, path);
+        if (buf[l - 1] != '/')
+                buf[l ++] = '/';
+        strcpy(&buf[l], self->entry->d_name);
+
+        switch (self->entry->d_type) {
+        case DT_DIR:
+                fs_entity_init(ent, buf, FsEntityDirectory);
+                break;
+        case DT_REG:
+                fs_entity_init(ent, buf, FsEntityFile);
+                break;
+        default:
+                fs_entity_init(ent, buf, FsEntitySystem);
+                break;
+        }
 }
 
-void dir_posix_next(struct directory* self, struct fs_entity* ent)
+bool dir_posix_first(struct dir_posix* self, struct fs_entity* ent)
 {
+        if (!self->ds) {
+                if (!(self->ds = opendir(dir_get_path(&self->__parent))))
+                        return false;
+        }
+        if (nullptr == (self->entry = readdir(self->ds)))
+                return false;
+        else {
+                __dir_posix_fill_fs_entity(self, ent);
+                return true;
+        }
+}
+
+bool dir_posix_next(struct dir_posix* self, struct fs_entity* ent)
+{
+        if (self->entry == nullptr || nullptr == (self->entry = readdir(self->ds)))
+                return false;
+        else {
+                __dir_posix_fill_fs_entity(self, ent);
+                return true;
+        }
 }
 
 /*
  * <file_posix> public
  */
-struct file_posix* file_posix_create(const char* path)
+struct file_posix* file_posix_create(const char* path, bool is_2create)
 {
         struct file_posix* self = malloc(sizeof(*self));
-        file_posix_init(self, path);
-        return self;
+        if (file_posix_init(self, path, is_2create))
+                return self;
+        else {
+                free(self);
+                return nullptr;
+        }
 }
 
-void file_posix_init(struct file_posix* self, const char* path)
+bool file_posix_init(struct file_posix* self, const char* path, bool is_2create)
 {
         memset(self, 0, sizeof(*self));
+
+        if (-1 == access(path, F_OK) && !is_2create)
+                // File not exists.
+                return false;
+
+        if (is_2create) {
+                // Open the file right away.
+                if (-1 == (self->fd = open(path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)))
+                        return false;
+        } else
+                // Lazy open policy.
+                self->fd = -1;
+
         file_init(&self->__parent, path,
                   (f_File_Free) file_posix_free,
                   (f_File_Read) file_posix_read,
                   (f_File_Write) file_posix_write,
                   (f_File_Seek) file_posix_seek);
+        return true;
 }
 
-void file_posix_free(struct file* self)
+void file_posix_free(struct file_posix* self)
 {
+        if (self->fd > 0) {
+                close(self->fd);
+        }
 }
 
-size_t file_posix_read(struct file* self, size_t num_bytes, const void* buf)
+size_t file_posix_read(struct file_posix* self, size_t num_bytes, void* buf)
 {
+        if (self->fd == -1) {
+                // Lazy open.
+                if (-1 == (self->fd = open(file_get_path(&self->__parent), O_RDWR)))
+                        return 0;
+        }
+        return read(self->fd, buf, num_bytes);
 }
 
-size_t file_posix_write(struct file* self, size_t num_bytes, void* buf)
+size_t file_posix_write(struct file_posix* self, size_t num_bytes, const void* buf)
 {
+        if (self->fd == -1) {
+                // Lazy open.
+                if (-1 == (self->fd = open(file_get_path(&self->__parent), O_RDWR)))
+                        return 0;
+        }
+        return write(self->fd, buf, num_bytes);
 }
 
-size_t file_posix_seek(struct file* self, size_t offset)
+size_t file_posix_seek(struct file_posix* self, size_t offset)
 {
+        abort();
 }
 
 #endif // ARCH_X86_64

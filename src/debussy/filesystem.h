@@ -21,17 +21,17 @@ struct fs_entity {
 /*
  * <fs_entity> decl
  */
-void fs_entity_init(struct fs_entity* self, const char* path, uint8_t type);
-void fs_entity_free(struct fs_entity* self);
-
+void            fs_entity_init(struct fs_entity* self, const char* path, uint8_t type);
+void            fs_entity_free(struct fs_entity* self);
+const char*     fs_entity_get_path(struct fs_entity* self);
 
 /*
  * <directory> decl
  */
 struct directory;
 typedef void    (*f_Dir_Free) (struct directory* self);
-typedef void    (*f_Dir_First) (struct directory* self, struct fs_entity* ent);
-typedef void    (*f_Dir_Next) (struct directory* self, struct fs_entity* ent);
+typedef bool    (*f_Dir_First) (struct directory* self, struct fs_entity* ent);
+typedef bool    (*f_Dir_Next) (struct directory* self, struct fs_entity* ent);
 
 struct directory {
         struct fs_entity        __parent;
@@ -43,13 +43,14 @@ struct directory {
 /*
  * <directory> public
  */
-void    dir_init(struct directory* self, const char* path,
-                 f_Dir_Free f_free,
-                 f_Dir_First f_first,
-                 f_Dir_Next f_next);
-void    dir_free(struct directory* self);
-void    dir_first(struct directory* self, struct fs_entity* ent);
-void    dir_next(struct directory* self, struct fs_entity* ent);
+void            dir_init(struct directory* self, const char* path,
+                         f_Dir_Free f_free,
+                         f_Dir_First f_first,
+                         f_Dir_Next f_next);
+void            dir_free(struct directory* self);
+const char*     dir_get_path(struct directory* self);
+bool            dir_first(struct directory* self, struct fs_entity* ent);
+bool            dir_next(struct directory* self, struct fs_entity* ent);
 
 
 /*
@@ -58,8 +59,8 @@ void    dir_next(struct directory* self, struct fs_entity* ent);
 struct file;
 
 typedef void            (*f_File_Free) (struct file* self);
-typedef size_t          (*f_File_Read) (struct file* self, size_t num_bytes, const void* buf);
-typedef size_t          (*f_File_Write) (struct file* self, size_t num_bytes, void* buf);
+typedef size_t          (*f_File_Read) (struct file* self, size_t num_bytes, void* buf);
+typedef size_t          (*f_File_Write) (struct file* self, size_t num_bytes, const void* buf);
 typedef size_t          (*f_File_Seek) (struct file* self, size_t offset);
 struct file {
         struct fs_entity        __parent;
@@ -74,15 +75,16 @@ struct file {
 /*
  * <file> public
  */
-void    file_init(struct file* self, const char* path,
-                  f_File_Free f_free,
-                  f_File_Read f_read,
-                  f_File_Write f_write,
-                  f_File_Seek f_seek);
-void    file_free(struct file* self);
-size_t  file_read(struct file* self, size_t num_bytes, const void* buf);
-size_t  file_write(struct file* self, size_t num_bytes, void* buf);
-size_t  file_seek(struct file* self, size_t offset);
+void            file_init(struct file* self, const char* path,
+                          f_File_Free f_free,
+                          f_File_Read f_read,
+                          f_File_Write f_write,
+                          f_File_Seek f_seek);
+void            file_free(struct file* self);
+const char*     file_get_path(struct file* self);
+size_t          file_read(struct file* self, size_t num_bytes, void* buf);
+size_t          file_write(struct file* self, size_t num_bytes, const void* buf);
+size_t          file_seek(struct file* self, size_t offset);
 
 
 /*
@@ -152,12 +154,20 @@ void filesys_test_connect_directory();
 #ifndef ARCH_X86_64
 
 #else
+#  include <container/set.h>
+
 /*
  * <fs_posix> decl
  */
+struct dir_posix;
+struct file_posix;
+
 struct fs_posix {
         struct filesystem       __parent;
         char*                   base;
+        set_templ(struct dir_posix*, void*) open_dirs;
+        set_templ(struct file_posix*, void*) open_files;
+
 };
 
 /*
@@ -167,29 +177,33 @@ struct fs_posix*        fs_posix_create(const char* base);
 void                    fs_posix_init(struct fs_posix* self, const char* base);
 void                    fs_posix_free(struct fs_posix* self);
 
-struct directory*       fs_posix_open_directory(struct fs_posix* self, const char* path, bool is_2create);
-void                    fs_posix_close_directory(struct fs_posix* self, struct directory* dir);
-bool                    fs_posix_remove_directory(struct fs_posix* self, struct directory* dir);
+struct dir_posix*       fs_posix_open_directory(struct fs_posix* self, const char* path, bool is_2create);
+void                    fs_posix_close_directory(struct fs_posix* self, struct dir_posix* dir);
+bool                    fs_posix_remove_directory(struct fs_posix* self, struct dir_posix* dir);
 
-struct file*            fs_posix_open_file(struct fs_posix* self, const char* file_path, bool is_2create);
-void                    fs_posix_close_file(struct fs_posix* self, struct file* file);
-bool                    fs_posix_remove_file(struct fs_posix* self, struct file* file);
+struct file_posix*      fs_posix_open_file(struct fs_posix* self, const char* file_path, bool is_2create);
+void                    fs_posix_close_file(struct fs_posix* self, struct file_posix* file);
+bool                    fs_posix_remove_file(struct fs_posix* self, struct file_posix* file);
 
 /*
  * <dir_posix> decl
  */
+typedef struct __dirstream DIR;
+struct dirent;
 struct dir_posix {
         struct directory        __parent;
+        DIR*                    ds;
+        struct dirent*          entry;
 };
 
 /*
  * <dir_posix> public
  */
-struct dir_posix*       dir_posix_create(const char* path);
-void                    dir_posix_init(struct dir_posix* self, const char* path);
-void                    dir_posix_free(struct directory* self);
-void                    dir_posix_first(struct directory* self, struct fs_entity* ent);
-void                    dir_posix_next(struct directory* self, struct fs_entity* ent);
+struct dir_posix*       dir_posix_create(const char* path, bool is_2create);
+bool                    dir_posix_init(struct dir_posix* self, const char* path, bool is_2create);
+void                    dir_posix_free(struct dir_posix* self);
+bool                    dir_posix_first(struct dir_posix* self, struct fs_entity* ent);
+bool                    dir_posix_next(struct dir_posix* self, struct fs_entity* ent);
 
 
 /*
@@ -197,17 +211,18 @@ void                    dir_posix_next(struct directory* self, struct fs_entity*
  */
 struct file_posix {
         struct file             __parent;
+        int                     fd;
 };
 
 /*
  * <file_posix> public
  */
-struct file_posix*      file_posix_create(const char* path);
-void                    file_posix_init(struct file_posix* self, const char* path);
-void                    file_posix_free(struct file* self);
-size_t                  file_posix_read(struct file* self, size_t num_bytes, const void* buf);
-size_t                  file_posix_write(struct file* self, size_t num_bytes, void* buf);
-size_t                  file_posix_seek(struct file* self, size_t offset);
+struct file_posix*      file_posix_create(const char* path, bool is_2create);
+bool                    file_posix_init(struct file_posix* self, const char* path, bool is_2create);
+void                    file_posix_free(struct file_posix* self);
+size_t                  file_posix_read(struct file_posix* self, size_t num_bytes, void* buf);
+size_t                  file_posix_write(struct file_posix* self, size_t num_bytes, const void* buf);
+size_t                  file_posix_seek(struct file_posix* self, size_t offset);
 
 #endif // ARCH_X86_64
 
