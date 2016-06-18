@@ -33,7 +33,7 @@ size_t connmgr_size(const struct conn_manager* self)
 
 void __connmgr_add_connection(struct conn_manager* self, struct connection* conn)
 {
-        self->conns = realloc(self->conns, self->num_conns + 1);
+        self->conns = realloc(self->conns, (self->num_conns + 1)*sizeof(*self->conns));
         self->conns[self->num_conns ++] = conn;
 }
 
