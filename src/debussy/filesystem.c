@@ -161,7 +161,8 @@ void filesys_init(struct filesystem* self, const uint8_t type,
                   f_Filesys_Remove_Directory f_remove_directory,
                   f_Filesys_Open_File f_open_file,
                   f_Filesys_Close_File f_close_file,
-                  f_Filesys_Remove_File f_remove_file)
+                  f_Filesys_Remove_File f_remove_file,
+                  f_Filesys_2string f_2string)
 {
         memset(self, 0, sizeof(*self));
         self->type = type;
@@ -173,6 +174,7 @@ void filesys_init(struct filesystem* self, const uint8_t type,
         self->f_open_file = f_open_file;
         self->f_close_file = f_close_file;
         self->f_remove_file = f_remove_file;
+        self->f_2string = f_2string;
 }
 
 void filesys_free(struct filesystem* self)
@@ -203,7 +205,7 @@ const char* filesys_working_directory(struct filesystem* self)
         return self->cwd;
 }
 
-bool filesys_clone_file(struct filesystem* self, struct file* src, struct file* dst)
+bool filesys_clone_file(const struct filesystem* self, struct file* src, struct file* dst)
 {
 #ifdef ARCH_X86_64
         uint8_t buf[BUFSIZ];
@@ -254,6 +256,11 @@ void filesys_close_file(struct filesystem* self, struct file* file)
 bool filesys_remove_file(struct filesystem* self, struct file* file)
 {
         return self->f_remove_file(self, file);
+}
+
+const char* filesys_2string(const struct filesystem* self)
+{
+        return self->f_2string(self);
 }
 
 /*
@@ -361,7 +368,8 @@ void fs_posix_init(struct fs_posix* self, const char* base)
                      (f_Filesys_Remove_Directory) fs_posix_remove_directory,
                      (f_Filesys_Open_File) fs_posix_open_file,
                      (f_Filesys_Close_File) fs_posix_close_file,
-                     (f_Filesys_Remove_File) fs_posix_remove_file);
+                     (f_Filesys_Remove_File) fs_posix_remove_file,
+                     (f_Filesys_2string) fs_posix_2string);
 }
 
 void fs_posix_free(struct fs_posix* self)
@@ -470,6 +478,14 @@ bool fs_posix_remove_file(struct fs_posix* self, struct file_posix* file)
         fs_posix_close_file(self, file);
         return -1 != remove(path);
 }
+
+const char* fs_posix_2string(const struct fs_posix* self)
+{
+        char* buf = malloc(strlen(self->base) + strlen("fs_posix on ") + 1);
+        sprintf(buf, "fs_posix on %s", self->base);
+        return buf;
+}
+
 
 /*
  * <dir_posix> public

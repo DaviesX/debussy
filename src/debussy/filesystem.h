@@ -108,6 +108,8 @@ typedef struct file*            (*f_Filesys_Open_File) (struct filesystem* self,
 typedef void                    (*f_Filesys_Close_File) (struct filesystem* self, struct file* file);
 typedef bool                    (*f_Filesys_Remove_File) (struct filesystem* self, struct file* file);
 
+typedef const char*             (*f_Filesys_2string) (const struct filesystem* self);
+
 struct filesystem {
         uint8_t                         type;
         char*                           cwd;
@@ -119,6 +121,8 @@ struct filesystem {
         f_Filesys_Open_File             f_open_file;
         f_Filesys_Close_File            f_close_file;
         f_Filesys_Remove_File           f_remove_file;
+
+        f_Filesys_2string               f_2string;
 };
 
 /*
@@ -131,11 +135,12 @@ void                    filesys_init(struct filesystem* self, const uint8_t type
                                      f_Filesys_Remove_Directory f_remove_directory,
                                      f_Filesys_Open_File f_open_file,
                                      f_Filesys_Close_File f_close_file,
-                                     f_Filesys_Remove_File f_remove_file);
+                                     f_Filesys_Remove_File f_remove_file,
+                                     f_Filesys_2string f_2string);
 void                    filesys_free(struct filesystem* self);
 const char*             filesys_connect_directory(struct filesystem* self, const char* path);
 const char*             filesys_working_directory(struct filesystem* self);
-bool                    filesys_clone_file(struct filesystem* self, struct file* src, struct file* dst);
+bool                    filesys_clone_file(const struct filesystem* self, struct file* src, struct file* dst);
 void                    filesys_scan(struct filesystem* self, const char* path, f_FileSys_Visit f_visit, void* user_data);
 
 struct directory*       filesys_open_directory(struct filesystem* self, const char* path, bool is_2create);
@@ -145,6 +150,9 @@ bool                    filesys_remove_directory(struct filesystem* self, struct
 struct file*            filesys_open_file(struct filesystem* self, const char* file_path, bool is_2create);
 void                    filesys_close_file(struct filesystem* self, struct file* file);
 bool                    filesys_remove_file(struct filesystem* self, struct file* file);
+
+const char*             filesys_2string(const struct filesystem* self);
+
 
 /*
  * <filesystem> test cases.
@@ -184,6 +192,8 @@ bool                    fs_posix_remove_directory(struct fs_posix* self, struct 
 struct file_posix*      fs_posix_open_file(struct fs_posix* self, const char* file_path, bool is_2create);
 void                    fs_posix_close_file(struct fs_posix* self, struct file_posix* file);
 bool                    fs_posix_remove_file(struct fs_posix* self, struct file_posix* file);
+
+const char*             fs_posix_2string(const struct fs_posix* self);
 
 /*
  * <dir_posix> decl
