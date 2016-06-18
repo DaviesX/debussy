@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <console.h>
+#include <filesystem.h>
 #include <connection.h>
 #include <connmgr.h>
 
@@ -131,9 +132,15 @@ bool connmgr_add_scanned_avr_connections(struct conn_manager* self, struct conso
 bool connmgr_add_local_connection(struct conn_manager* self, struct filesystem* base, struct console* console)
 {
         struct conn_local* conn = conn_local_create(console, base);
-        if (!conn)
+        if (!conn) {
+                const char* base_info = filesys_2string(base);
+                console_log(console, ConsoleLogSevere, "Failed to create local connection on %s",
+                            base_info), free((void*) base_info);
                 return false;
+        }
+        connmgr_remove_connection(self, conn->__parent.id);
         __connmgr_add_connection(self, &conn->__parent);
+        console_log(console, ConsoleLogNormal, "Local Connection %s", conn_local_2string(conn));
         return true;
 }
 
@@ -141,6 +148,8 @@ bool connmgr_add_local_connection(struct conn_manager* self, struct filesystem* 
 
 void connmgr_remove_connection(struct conn_manager* self, const char* id)
 {
+        if (id == nullptr)
+                return;
         size_t i;
         for (i = 0; i < connmgr_size(self); i ++) {
                 if (conn_is_equal(self->conns[i], id)) {
@@ -151,6 +160,8 @@ void connmgr_remove_connection(struct conn_manager* self, const char* id)
 
 struct connection* connmgr_get_connection(const struct conn_manager* self, const char* id)
 {
+        if (id == nullptr)
+                return nullptr;
         size_t i;
         for (i = 0; i < connmgr_size(self); i ++) {
                 if (conn_is_equal(self->conns[i], id)) {
@@ -170,9 +181,9 @@ const struct connection** connmgr_get_all_connections(const struct conn_manager*
         return (const struct connection**) self->conns;
 }
 
-char** connmgr_2strings(const struct conn_manager* self)
+const char** connmgr_2strings(const struct conn_manager* self)
 {
-        char** strings = malloc(sizeof(char*)*connmgr_size(self));
+        const char** strings = malloc(sizeof(char*)*connmgr_size(self));
         size_t i;
         for (i = 0; i < connmgr_size(self); i ++) {
                 strings[i] = conn_2string(self->conns[i]);

@@ -24,7 +24,7 @@ void                    connmgr_remove_connection(struct conn_manager* self, con
 struct connection*      connmgr_get_connection(const struct conn_manager* self, const char* id);
 struct connection*      connmgr_get_connection_at(const struct conn_manager* self, size_t i);
 const struct connection** connmgr_get_all_connections(const struct conn_manager* self);
-char**                  connmgr_2strings(const struct conn_manager* self);
+const char**            connmgr_2strings(const struct conn_manager* self);
 
 
 #endif // CONNMGR_H_INCLUDED
