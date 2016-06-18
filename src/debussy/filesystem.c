@@ -139,7 +139,6 @@ void filesys_init(struct filesystem* self, const uint8_t type,
                   f_Filesys_Open_Directory f_open_directory,
                   f_Filesys_Close_Directory f_close_directory,
                   f_Filesys_Remove_Directory f_remove_directory,
-                  f_Filesys_List_Directory f_list_directory,
                   f_Filesys_Open_File f_open_file,
                   f_Filesys_Close_File f_close_file,
                   f_Filesys_Remove_File f_remove_file)
@@ -151,7 +150,6 @@ void filesys_init(struct filesystem* self, const uint8_t type,
         self->f_open_directory = f_open_directory;
         self->f_close_directory = f_close_directory;
         self->f_remove_directory = f_remove_directory;
-        self->f_list_directory = f_list_directory;
         self->f_open_file = f_open_file;
         self->f_close_file = f_close_file;
         self->f_remove_file = f_remove_file;
@@ -199,7 +197,11 @@ bool filesys_clone_file(struct filesystem* self, struct file* src, struct file* 
                 }
         }
         return true;
+}
 
+void filesys_scan(struct filesystem* self, const char* path, f_FileSys_Visit f_visit, void* user_data)
+{
+        abort();
 }
 
 
@@ -216,12 +218,6 @@ void filesys_close_directory(struct filesystem* self, struct directory* dir)
 bool filesys_remove_directory(struct filesystem* self, struct directory* dir)
 {
         return self->f_remove_directory(self, dir);
-}
-
-void filesys_list_directory(struct filesystem* self, const char* path, uint8_t depth, uint8_t type_filter,
-                            f_FileSys_Visit f_visit, void* user_data)
-{
-        self->f_list_directory(self, path, depth, type_filter, f_visit, user_data);
 }
 
 
@@ -247,8 +243,11 @@ bool filesys_remove_file(struct filesystem* self, struct file* file)
 
 void filesys_test_connect_directory()
 {
+#ifndef ARCH_X86_64
+        struct filesystem* fs = nullptr;
+#else
         struct filesystem* fs = &fs_posix_create(".")->__parent;
-
+#endif // ARCH_X86_64
         filesys_connect_directory(fs, "a/b/c/d");
         printf("dir: %s\n", filesys_working_directory(fs));
         assert(!strcmp("/a/b/c/d", filesys_working_directory(fs)));
@@ -294,6 +293,9 @@ void filesys_test_connect_directory()
 }
 
 
+#ifndef ARCH_X86_64
+
+#else
 /*
  * <fs_posix> public
  */
@@ -313,7 +315,6 @@ void fs_posix_init(struct fs_posix* self, const char* base)
                      (f_Filesys_Open_Directory) fs_posix_open_directory,
                      (f_Filesys_Close_Directory) fs_posix_close_directory,
                      (f_Filesys_Remove_Directory) fs_posix_remove_directory,
-                     (f_Filesys_List_Directory) fs_posix_list_directory,
                      (f_Filesys_Open_File) fs_posix_open_file,
                      (f_Filesys_Close_File) fs_posix_close_file,
                      (f_Filesys_Remove_File) fs_posix_remove_file);
@@ -340,13 +341,6 @@ bool fs_posix_remove_directory(struct fs_posix* self, struct directory* dir)
         abort();
 }
 
-void fs_posix_list_directory(struct fs_posix* self,
-                             const char* path, uint8_t depth, uint8_t type_filter,
-                             f_FileSys_Visit f_visit, void* user_data)
-{
-        abort();
-}
-
 
 struct file* fs_posix_open_file(struct fs_posix* self, const char* file_path, bool is_2create)
 {
@@ -362,3 +356,72 @@ bool fs_posix_remove_file(struct fs_posix* self, struct file* file)
 {
         abort();
 }
+
+/*
+ * <dir_posix> public
+ */
+struct dir_posix* dir_posix_create(const char* path)
+{
+        struct dir_posix* self = malloc(sizeof(*self));
+        dir_posix_init(self, path);
+        return self;
+}
+
+void dir_posix_init(struct dir_posix* self, const char* path)
+{
+        memset(self, 0, sizeof(*self));
+        dir_init(&self->__parent, path,
+                 (f_Dir_Free) dir_posix_free,
+                 (f_Dir_First) dir_posix_first,
+                 (f_Dir_Next) dir_posix_next);
+}
+
+void dir_posix_free(struct directory* self)
+{
+}
+
+void dir_posix_first(struct directory* self, struct fs_entity* ent)
+{
+}
+
+void dir_posix_next(struct directory* self, struct fs_entity* ent)
+{
+}
+
+/*
+ * <file_posix> public
+ */
+struct file_posix* file_posix_create(const char* path)
+{
+        struct file_posix* self = malloc(sizeof(*self));
+        file_posix_init(self, path);
+        return self;
+}
+
+void file_posix_init(struct file_posix* self, const char* path)
+{
+        memset(self, 0, sizeof(*self));
+        file_init(&self->__parent, path,
+                  (f_File_Free) file_posix_free,
+                  (f_File_Read) file_posix_read,
+                  (f_File_Write) file_posix_write,
+                  (f_File_Seek) file_posix_seek);
+}
+
+void file_posix_free(struct file* self)
+{
+}
+
+size_t file_posix_read(struct file* self, size_t num_bytes, const void* buf)
+{
+}
+
+size_t file_posix_write(struct file* self, size_t num_bytes, void* buf)
+{
+}
+
+size_t file_posix_seek(struct file* self, size_t offset)
+{
+}
+
+#endif // ARCH_X86_64
