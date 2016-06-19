@@ -139,6 +139,23 @@
       </object>
     </child>
   </object>
+  <object class="GtkImage" id="image1">
+    <property name="width_request">-1</property>
+    <property name="height_request">-1</property>
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">play.png</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">stop.png</property>
+  </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">pause.png</property>
+  </object>
   <object class="GtkWindow" id="win-main-frame">
     <property name="width_request">800</property>
     <property name="height_request">600</property>
@@ -252,7 +269,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkListBox" id="listbox1">
+                  <object class="GtkListBox" id="lb-dev-files">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                   </object>
@@ -295,11 +312,126 @@
           </packing>
         </child>
         <child>
+          <object class="GtkGrid" id="grid2">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">10</property>
+            <property name="margin_right">10</property>
+            <property name="margin_top">5</property>
+            <property name="margin_bottom">5</property>
+            <child>
+              <object class="GtkButton" id="bt-play">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="margin_right">2</property>
+                <property name="image">image1</property>
+                <property name="image_position">right</property>
+                <property name="always_show_image">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="bt-pause">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="margin_left">2</property>
+                <property name="margin_right">2</property>
+                <property name="image">image3</property>
+                <property name="relief">half</property>
+                <property name="always_show_image">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="bt-stop">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="margin_left">2</property>
+                <property name="margin_right">2</property>
+                <property name="image">image2</property>
+                <property name="always_show_image">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkVolumeButton" id="vb-volume">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="relief">none</property>
+                <property name="focus_on_click">False</property>
+                <property name="orientation">vertical</property>
+                <property name="icons">audio-volume-muted-symbolic
+audio-volume-high-symbolic
+audio-volume-low-symbolic
+audio-volume-medium-symbolic</property>
+                <child internal-child="plus_button">
+                  <object class="GtkButton" id="volumebutton-plus_button1">
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <property name="relief">none</property>
+                  </object>
+                </child>
+                <child internal-child="minus_button">
+                  <object class="GtkButton" id="volumebutton-minus_button1">
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <property name="relief">none</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">4</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScale" id="sc-player-progress">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="margin_left">7</property>
+                <property name="margin_right">7</property>
+                <property name="hexpand">True</property>
+                <property name="show_fill_level">True</property>
+                <property name="fill_level">1</property>
+                <property name="round_digits">1</property>
+                <property name="digits">2</property>
+              </object>
+              <packing>
+                <property name="left_attach">3</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkGrid" id="grid1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="margin_top">5</property>
             <child>
-              <object class="GtkButton" id="button1">
+              <object class="GtkButton" id="bt-upload">
                 <property name="label" translatable="yes">Upload</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -315,7 +447,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button2">
+              <object class="GtkButton" id="bt-downlod">
                 <property name="label" translatable="yes">Download</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -329,7 +461,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button3">
+              <object class="GtkButton" id="bt-remove">
                 <property name="label" translatable="yes">Remove</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -343,7 +475,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button4">
+              <object class="GtkButton" id="bt-refresh">
                 <property name="label" translatable="yes">Refresh</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -373,7 +505,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
@@ -392,7 +524,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
       </object>
