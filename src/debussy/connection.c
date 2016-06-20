@@ -21,8 +21,8 @@ void conn_init(struct connection* self, struct console* console, const char* id,
                f_Conn_Get_Action f_get_action,
                f_Conn_Puts f_puts,
                f_Conn_Gets f_gets,
-               f_Conn_Put_Directory f_put_directory,
-               f_Conn_Get_Directory f_get_directory,
+               f_Conn_Put_Path f_put_path,
+               f_Conn_Get_Path f_get_path,
                f_Conn_Put_File f_put_file,
                f_Conn_Get_File f_get_file,
                f_Conn_Put_Audio_Player_State f_put_audio_player_state,
@@ -40,8 +40,8 @@ void conn_init(struct connection* self, struct console* console, const char* id,
         self->f_get_action = f_get_action;
         self->f_puts = f_puts;
         self->f_gets = f_gets;
-        self->f_put_directory = f_put_directory;
-        self->f_get_directory = f_get_directory;
+        self->f_put_path = f_put_path;
+        self->f_get_path = f_get_path;
         self->f_put_file = f_put_file;
         self->f_get_file = f_get_file;
         self->f_put_audio_player_state = f_put_audio_player_state;
@@ -84,14 +84,14 @@ const char* conn_gets(struct connection* self)
         return self->f_gets(self);
 }
 
-void conn_put_directory(struct connection* self, struct directory* src)
+void conn_put_path(struct connection* self, const char* path, bool has_next)
 {
-        self->f_put_directory(self, src);
+        self->f_put_path(self, path, has_next);
 }
 
-void conn_get_directory_structure(struct connection* self, struct directory* dst)
+const char* conn_get_path(struct connection* self, bool* has_next)
 {
-        self->f_get_directory(self, dst);
+        return self->f_get_path(self, has_next);
 }
 
 void conn_put_file(struct connection* self, struct file* src)
@@ -142,8 +142,8 @@ void conn_a2h_init(struct conn_a2h* self)
                   (f_Conn_Get_Action) conn_a2h_get_action,
                   (f_Conn_Puts) conn_a2h_puts,
                   (f_Conn_Gets) conn_a2h_gets,
-                  (f_Conn_Put_Directory) conn_a2h_put_directory,
-                  (f_Conn_Get_Directory) conn_a2h_get_directory,
+                  (f_Conn_Put_Path) conn_a2h_put_path,
+                  (f_Conn_Get_Path) conn_a2h_get_path,
                   (f_Conn_Put_File)conn_a2h_put_file,
                   (f_Conn_Get_File) conn_a2h_get_file,
                   (f_Conn_Put_Audio_Player_State) conn_a2h_put_audio_player_state,
@@ -196,12 +196,12 @@ const char* conn_a2h_gets(struct conn_a2h* self)
         abort();
 }
 
-void conn_a2h_put_directory(struct conn_a2h* self, struct directory* src)
+void conn_a2h_put_path(struct conn_a2h* self, const char* path, bool has_next)
 {
         abort();
 }
 
-void conn_a2h_get_directory(struct conn_a2h* self, struct directory* dst)
+const char* conn_a2h_get_path(struct conn_a2h* self, bool* has_next)
 {
         abort();
 }
@@ -290,8 +290,8 @@ void conn_h2a_init(struct conn_h2a* self,
                   (f_Conn_Get_Action) conn_h2a_get_action,
                   (f_Conn_Puts) conn_h2a_puts,
                   (f_Conn_Gets) conn_h2a_gets,
-                  (f_Conn_Put_Directory) conn_h2a_put_directory,
-                  (f_Conn_Get_Directory) conn_h2a_get_directory,
+                  (f_Conn_Put_Path) conn_h2a_put_path,
+                  (f_Conn_Get_Path) conn_h2a_get_path,
                   (f_Conn_Put_File)conn_h2a_put_file,
                   (f_Conn_Get_File) conn_h2a_get_file,
                   (f_Conn_Put_Audio_Player_State) conn_h2a_put_audio_player_state,
@@ -384,12 +384,12 @@ const char* conn_h2a_gets(struct conn_h2a* self)
         return n_consumed > 0 ? strdup(request.buf) : nullptr;
 }
 
-void conn_h2a_put_directory(struct conn_h2a* self, struct directory* src)
+void conn_h2a_put_path(struct conn_h2a* self, const char* path, bool has_next)
 {
         abort();
 }
 
-void conn_h2a_get_directory(struct conn_h2a* self, struct directory* dst)
+const char* conn_h2a_get_path(struct conn_h2a* self, bool* has_next)
 {
         abort();
 }
@@ -456,8 +456,8 @@ bool conn_local_init(struct conn_local* self, struct console* console, struct fi
                           (f_Conn_Get_Action) conn_local_get_action,
                           (f_Conn_Puts) conn_local_puts,
                           (f_Conn_Gets) conn_local_gets,
-                          (f_Conn_Put_Directory) conn_local_put_directory,
-                          (f_Conn_Get_Directory) conn_local_get_directory,
+                          (f_Conn_Put_Path) conn_local_put_path,
+                          (f_Conn_Get_Path) conn_local_get_path,
                           (f_Conn_Put_File)conn_local_put_file,
                           (f_Conn_Get_File) conn_local_get_file,
                           (f_Conn_Put_Audio_Player_State) conn_local_put_audio_player_state,
@@ -513,12 +513,12 @@ const char* conn_local_gets(struct conn_local* self)
         return nullptr;
 }
 
-void conn_local_put_directory(struct conn_local* self, struct directory* src)
+void conn_local_put_path(struct conn_local* self, const char* path, bool has_next)
 {
         abort();
 }
 
-void conn_local_get_directory(struct conn_local* self, struct directory* dst)
+const char* conn_local_get_path(struct conn_local* self, bool has_next)
 {
         abort();
 }
