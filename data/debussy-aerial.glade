@@ -246,7 +246,6 @@
             <property name="border_width">1</property>
             <property name="position">200</property>
             <property name="position_set">True</property>
-            <property name="wide_handle">True</property>
             <child>
               <object class="GtkBox" id="box3">
                 <property name="visible">True</property>
