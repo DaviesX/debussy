@@ -22,7 +22,7 @@ struct audioplayer_state;
 struct connection;
 
 typedef void                    (*f_Conn_Free) (struct connection* self);
-typedef bool                    (*f_Conn_Connect_To) (struct connection* self);
+typedef bool                    (*f_Conn_Connect) (struct connection* self);
 typedef bool                    (*f_Conn_Disconnect) (struct connection* self);
 typedef bool                    (*f_Conn_Is_Connected) (const struct connection* self);
 typedef struct action_protocol* (*f_Conn_Get_Action) (struct connection* self, bool is_blocking);
@@ -41,7 +41,7 @@ struct connection {
         uint8_t                         type;
         struct console*                 console;
         f_Conn_Free                     f_free;
-        f_Conn_Connect_To               f_connect_to;
+        f_Conn_Connect                  f_connect;
         f_Conn_Disconnect               f_disconnect;
         f_Conn_Is_Connected             f_is_connected;
         f_Conn_Get_Action               f_get_action;
@@ -61,7 +61,7 @@ struct connection {
  */
 void                    conn_init(struct connection* self, struct console* console, const char* id, uint8_t type,
                                   f_Conn_Free f_free,
-                                  f_Conn_Connect_To f_connect_to,
+                                  f_Conn_Connect f_connect,
                                   f_Conn_Disconnect f_disconnect,
                                   f_Conn_Is_Connected f_is_connected,
                                   f_Conn_Get_Action f_get_action,
@@ -77,7 +77,7 @@ void                    conn_init(struct connection* self, struct console* conso
 void                    conn_free(struct connection* self);
 #define                 conn_is_equal(__self, __id)   (!strcmp((__self)->id, __id))
 #define                 conn_is_of_type(__self, __type)  ((__self)->type == (__type))
-bool                    conn_connect_to(struct connection* self);
+bool                    conn_conect(struct connection* self);
 bool                    conn_disconnect(struct connection* self);
 bool                    conn_is_connected(const struct connection* self);
 struct action_protocol* conn_get_action(struct connection* self, bool is_blocking);
@@ -106,7 +106,7 @@ struct conn_a2h {
 struct conn_a2h*        conn_a2h_create();
 void                    conn_a2h_init(struct conn_a2h* self);
 void                    conn_a2h_free(struct conn_a2h* self);
-bool                    conn_a2h_connect_to(struct conn_a2h* self);
+bool                    conn_a2h_connect(struct conn_a2h* self);
 bool                    conn_a2h_disconnect(struct conn_a2h* self);
 bool                    conn_a2h_is_connected(const struct conn_a2h* self);
 struct action_protocol* conn_a2h_get_action(struct conn_a2h* self, bool is_blocking);
@@ -154,7 +154,7 @@ void                    conn_h2a_init(struct conn_h2a* self, struct console* con
                                       const char* manufacturer,
                                       const char* dev_node_path);
 void                    conn_h2a_free(struct conn_h2a* self);
-bool                    conn_h2a_connect_to(struct conn_h2a* self);
+bool                    conn_h2a_connect(struct conn_h2a* self);
 bool                    conn_h2a_disconnect(struct conn_h2a* self);
 bool                    conn_h2a_is_connected(const struct conn_h2a* self);
 struct action_protocol* conn_h2a_get_action(struct conn_h2a* self, bool is_blocking);
@@ -185,7 +185,7 @@ struct conn_local {
 struct conn_local*      conn_local_create(struct console* console, struct filesystem* base);
 bool                    conn_local_init(struct conn_local* self, struct console* console, struct filesystem* base);
 void                    conn_local_free(struct conn_local* self);
-bool                    conn_local_connect_to(struct conn_local* self);
+bool                    conn_local_connect(struct conn_local* self);
 bool                    conn_local_disconnect(struct conn_local* self);
 bool                    conn_local_is_connected(const struct conn_local* self);
 struct action_protocol* conn_local_get_action(struct conn_local* self, bool is_blocking);

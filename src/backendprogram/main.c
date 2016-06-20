@@ -18,6 +18,9 @@ int main()
         spiioexp_sys_init();
         extsram_sys_init();
 
+        DDRC = 0xff;
+        PORTC = 0x0;
+
         schd_run(__idle, nullptr);
         return 0;
 }

@@ -105,7 +105,7 @@ void __app_setup_connection(struct app* self, struct connection* conn)
                 char msg[256];
                 const char* conn_str = conn_2string(conn);
 
-                if (!conn_connect_to(conn)) {
+                if (!conn_conect(conn)) {
                         sprintf(msg, "Connection %s cannot be established", (char*) conn_str), free((void*) conn_str);
                         __app_show_message_box(AERIAL_VERSION_STRING, msg,
                                                GTK_MESSAGE_ERROR, self->win_frame);

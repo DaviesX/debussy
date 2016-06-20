@@ -15,7 +15,7 @@
  */
 void conn_init(struct connection* self, struct console* console, const char* id, uint8_t type,
                f_Conn_Free f_free,
-               f_Conn_Connect_To f_connect_to,
+               f_Conn_Connect f_connect,
                f_Conn_Disconnect f_disconnect,
                f_Conn_Is_Connected f_is_connected,
                f_Conn_Get_Action f_get_action,
@@ -34,7 +34,7 @@ void conn_init(struct connection* self, struct console* console, const char* id,
         self->type = type;
         self->console = console;
         self->f_free = f_free;
-        self->f_connect_to = f_connect_to;
+        self->f_connect = f_connect;
         self->f_disconnect = f_disconnect;
         self->f_is_connected = f_is_connected;
         self->f_get_action = f_get_action;
@@ -54,9 +54,9 @@ void conn_free(struct connection* self)
         self->f_free(self), free(self->id), memset(self, 0, sizeof(*self));
 }
 
-bool conn_connect_to(struct connection* self)
+bool conn_conect(struct connection* self)
 {
-        return self->f_connect_to(self);
+        return self->f_connect(self);
 }
 
 bool conn_disconnect(struct connection* self)
@@ -136,7 +136,7 @@ void conn_a2h_init(struct conn_a2h* self)
         memset(self, 0, sizeof(*self));
         conn_init(&self->__parent, nullptr, nullptr, ConnectionAvr2Host,
                   (f_Conn_Free) conn_a2h_free,
-                  (f_Conn_Connect_To) conn_a2h_connect_to,
+                  (f_Conn_Connect) conn_a2h_connect,
                   (f_Conn_Disconnect) conn_a2h_disconnect,
                   (f_Conn_Is_Connected) conn_a2h_is_connected,
                   (f_Conn_Get_Action) conn_a2h_get_action,
@@ -156,7 +156,7 @@ void conn_a2h_free(struct conn_a2h* self)
         conn_a2h_disconnect(self);
 }
 
-bool conn_a2h_connect_to(struct conn_a2h* self)
+bool conn_a2h_connect(struct conn_a2h* self)
 {
         hidusb_connect();
         return true;
@@ -238,7 +238,7 @@ void conn_a2h_puts_test()
 {
         struct conn_a2h conn;
         conn_a2h_init(&conn);
-        conn_a2h_connect_to(&conn);
+        conn_a2h_connect(&conn);
 
         while(1) {
                 conn_a2h_puts(&conn, "hello world");
@@ -284,7 +284,7 @@ void conn_h2a_init(struct conn_h2a* self,
         self->fd                = -1;
         conn_init(&self->__parent, console, self->vender_id, ConnectionHost2Avr,
                   (f_Conn_Free) conn_h2a_free,
-                  (f_Conn_Connect_To) conn_h2a_connect_to,
+                  (f_Conn_Connect) conn_h2a_connect,
                   (f_Conn_Disconnect) conn_h2a_disconnect,
                   (f_Conn_Is_Connected) conn_h2a_is_connected,
                   (f_Conn_Get_Action) conn_h2a_get_action,
@@ -308,7 +308,7 @@ void conn_h2a_free(struct conn_h2a* self)
         memset(self, 0, sizeof(*self));
 }
 
-bool conn_h2a_connect_to(struct conn_h2a* self)
+bool conn_h2a_connect(struct conn_h2a* self)
 {
         struct console* console = self->__parent.console;
 
@@ -450,7 +450,7 @@ bool conn_local_init(struct conn_local* self, struct console* console, struct fi
                 const char* base_id = filesys_2string(base);
                 conn_init(&self->__parent, console, base_id, ConnectionHostLocal,
                           (f_Conn_Free) conn_local_free,
-                          (f_Conn_Connect_To) conn_local_connect_to,
+                          (f_Conn_Connect) conn_local_connect,
                           (f_Conn_Disconnect) conn_local_disconnect,
                           (f_Conn_Is_Connected) conn_local_is_connected,
                           (f_Conn_Get_Action) conn_local_get_action,
@@ -474,7 +474,7 @@ void conn_local_free(struct conn_local* self)
         memset(self, 0, sizeof(*self));
 }
 
-bool conn_local_connect_to(struct conn_local* self)
+bool conn_local_connect(struct conn_local* self)
 {
         struct console* console = self->__parent.console;
 
