@@ -25,6 +25,7 @@ struct app {
         GtkComboBoxText*        cb_selected;
         GtkButton*              bt_conn_confirm;
         GtkButton*              bt_conn_cancel;
+        GtkListBox*             lb_dev_files;
 
         struct conn_manager     conn_mgr;
         struct connection*      curr_conn;
@@ -44,17 +45,23 @@ void app_run(struct app* self);
 /*
  * <app> private
  */
+GtkBuilder*     __app_builder_load(const struct app* self, const char* filename);
+void*           __app_builder_get(const struct app* self, GtkBuilder* builder, const char* object_id);
+void            __app_builder_free(const struct app* self, GtkBuilder* builder);
 void            __app_push_status(struct app* self, const char* status);
 void            __app_pop_status(struct app* self);
+void            __app_setup_connection(struct app* self, struct connection* conn);
 void            __app_update(struct app* self);
 int             __app_show_message_box(const char* title, const char* message, const GtkMessageType type, GtkWindow* parent);
+void            __app_on_quit(GtkWidget* widget, gpointer user_data);
 void            __app_on_scan_connections(GtkMenuItem* menuitem, gpointer user_data);
 void            __app_on_conn_confirm(GtkButton* button, gpointer user_data);
 void            __app_on_connect2dev(GtkMenuItem* menuitem, gpointer user_data);
 void            __app_on_add_local_device(GtkMenuItem* menuitem, gpointer user_data);
 void            __app_on_help_about(GtkMenuItem* menuitem, gpointer user_data);
-gboolean        __app_fetch_device_console(gpointer user_data);
-gboolean        __app_capture_device(GtkButton* button, gpointer user_data);
+gboolean        __app_on_fetch_device_console(gpointer user_data);
+void            __app_on_catch_device_files(GtkWidget* widget, gpointer user_data);
+gboolean        __app_on_capture_device(GtkButton* button, gpointer user_data);
 
 
 #define DEFAULT_WINDOW_TITLE    AERIAL_VERSION_STRING
@@ -64,7 +71,7 @@ gboolean        __app_capture_device(GtkButton* button, gpointer user_data);
 /*
  * <app> private
  */
-/******************* GUI utils *******************/
+/******************* Helpers *******************/
 void __app_push_status(struct app* self, const char* status)
 {
         if (self->sb_status) {
@@ -87,6 +94,42 @@ void __app_update(struct app* self)
         if (self->win_frame) {
                 gtk_window_set_title(GTK_WINDOW(self->win_frame), self->title);
                 gtk_widget_set_size_request(GTK_WIDGET(self->win_frame), self->w, self->h);
+        }
+        __app_on_scan_connections(nullptr, self);
+        __app_on_catch_device_files(nullptr, self);
+}
+
+void __app_setup_connection(struct app* self, struct connection* conn)
+{
+        if (conn) {
+                char msg[256];
+                const char* conn_str = conn_2string(conn);
+
+                if (!conn_connect_to(conn)) {
+                        sprintf(msg, "Connection %s cannot be established", (char*) conn_str), free((void*) conn_str);
+                        __app_show_message_box(AERIAL_VERSION_STRING, msg,
+                                               GTK_MESSAGE_ERROR, self->win_frame);
+                } else {
+                        // Connected to the device successfully.
+                        if (self->curr_conn) {
+                                // Disconnect the previous device.
+                                __app_pop_status(self);
+                                conn_disconnect(self->curr_conn);
+                        }
+
+                        self->curr_conn = conn;
+                        __app_push_status(self, conn_str);
+                        __app_update(self);
+
+                        // Handle the widgets.
+                        sprintf(msg, "Has been connected to %s", (char*) conn_str), free((void*) conn_str);
+                        __app_show_message_box(AERIAL_VERSION_STRING, msg,
+                                               GTK_MESSAGE_INFO, self->win_frame);
+                        gtk_widget_hide(GTK_WIDGET(self->dl_connection));
+                }
+        } else {
+                __app_show_message_box(AERIAL_VERSION_STRING, "Invalid connection",
+                                       GTK_MESSAGE_ERROR, self->win_frame);
         }
 }
 
@@ -143,6 +186,20 @@ const char* __app_show_file_chooser(const char* title, GtkFileChooserAction acti
 /******************* GUI utils *******************/
 
 /******************* Callback controllers *******************/
+void __app_on_quit(GtkWidget* widget, gpointer user_data)
+{
+        struct app* self = (struct app*) user_data;
+
+        __app_pop_status(self);
+
+        console_log(self->console, ConsoleLogNormal, "Switching back to stdconsole...");
+        console_free(self->console);
+        self->console = stdconsole_create();
+
+        gtk_main_quit();
+}
+
+
 // Handling connections.
 void __app_on_scan_connections(GtkMenuItem* menuitem, gpointer user_data)
 {
@@ -172,30 +229,7 @@ void __app_on_conn_confirm(GtkButton* button, gpointer user_data)
         if (button == self->bt_conn_confirm) {
                 struct connection* conn = connmgr_get_connection(&self->conn_mgr,
                                               gtk_combo_box_get_active_id(GTK_COMBO_BOX(self->cb_selected)));
-                if (conn) {
-                        char msg[256];
-                        const char* conn_str = conn_2string(conn);
-
-                        if (!conn_connect_to(conn)) {
-                                sprintf(msg, "Connection %s cannot be established", (char*) conn_str), free((void*) conn_str);
-                                __app_show_message_box(AERIAL_VERSION_STRING, msg,
-                                                               GTK_MESSAGE_ERROR, self->win_frame);
-                        } else {
-                                // Connected to the device successfully.
-                                if (self->curr_conn) {
-                                        // Disconnect the previous device.
-                                        conn_disconnect(self->curr_conn);
-                                }
-                                self->curr_conn = conn;
-                                sprintf(msg, "Has been connected to %s", (char*) conn_str), free((void*) conn_str);
-                                __app_show_message_box(AERIAL_VERSION_STRING, msg,
-                                                               GTK_MESSAGE_INFO, self->win_frame);
-                                gtk_widget_hide(GTK_WIDGET(self->dl_connection));
-                        }
-                } else {
-                        __app_show_message_box(AERIAL_VERSION_STRING, "Invalid connection",
-                                                       GTK_MESSAGE_ERROR, self->win_frame);
-                }
+                __app_setup_connection(self, conn);
         } else {
                 gtk_widget_hide(GTK_WIDGET(self->dl_connection));
         }
@@ -204,9 +238,6 @@ void __app_on_conn_confirm(GtkButton* button, gpointer user_data)
 void __app_on_connect2dev(GtkMenuItem* menuitem, gpointer user_data)
 {
         struct app* self = (struct app*) user_data;
-
-        // Refresh connections.
-        __app_on_scan_connections(menuitem, user_data);
 
         // Initialize selection box.
         const char** texts = connmgr_2strings(&self->conn_mgr);
@@ -260,7 +291,7 @@ void __app_on_help_about(GtkMenuItem* menuitem, gpointer user_data)
 }
 
 // Device access.
-gboolean __app_fetch_device_console(gpointer user_data)
+gboolean __app_on_fetch_device_console(gpointer user_data)
 {
         struct app* self = (struct app*) user_data;
         const char* msg = self->curr_conn != nullptr ? conn_gets(self->curr_conn) : nullptr;
@@ -269,7 +300,31 @@ gboolean __app_fetch_device_console(gpointer user_data)
         return TRUE;
 }
 
-gboolean __app_capture_device(GtkButton* button, gpointer user_data)
+static void __remove_all_list_items(gpointer data, gpointer user_data)
+{
+        struct app* self = (struct app*) user_data;
+
+        gtk_container_remove(GTK_CONTAINER(self->lb_dev_files), data);
+}
+
+void __app_on_catch_device_files(GtkWidget* widget, gpointer user_data)
+{
+        struct app* self = (struct app*) user_data;
+
+        // Empty the list box.
+        GList* all_widgets = gtk_container_get_children(GTK_CONTAINER(self->lb_dev_files));
+        g_list_foreach(all_widgets, __remove_all_list_items, self);
+
+        if (self->curr_conn) {
+                // Get file entries into the list box.
+        } else {
+                GtkWidget* lb_no_dev = gtk_label_new("No device is connected");
+                gtk_container_add(GTK_CONTAINER(self->lb_dev_files), lb_no_dev);
+        }
+        gtk_widget_show_all(GTK_WIDGET(self->lb_dev_files));
+}
+
+gboolean __app_on_capture_device(GtkButton* button, gpointer user_data)
 {
         // struct app* self = (struct app*) user_data;
         return TRUE;
@@ -334,6 +389,20 @@ GtkBuilder* __app_builder_load(const struct app* self, const char* filename)
         return builder;
 }
 
+void* __app_builder_get(const struct app* self, GtkBuilder* builder, const char* object_id)
+{
+        void* widget = (void*) gtk_builder_get_object(builder, object_id);
+        if (widget == nullptr) {
+                console_log(self->console, ConsoleLogSevere, "Failed to load widget %s", object_id);
+        }
+        return widget;
+}
+
+void __app_builder_free(const struct app* self, GtkBuilder* builder)
+{
+        g_object_unref(builder);
+}
+
 void app_run(struct app* self)
 {
         console_log(self->console, ConsoleLogNormal, "Initializing GTK+...");
@@ -342,16 +411,15 @@ void app_run(struct app* self)
         g_log_set_handler("Gtk", G_LOG_LEVEL_WARNING, g_log_default_handler, NULL);
 
         // Create the main app from builder.
-        GtkWindow* win_frame = nullptr;
         GtkBuilder* builder = __app_builder_load(self, "data/debussy-aerial.glade");
         if (builder == nullptr) {
                 console_log(self->console, ConsoleLogSevere, "Failed to build aerial UI. Use fallback app.");
-                win_frame = (GtkWindow*) gtk_window_new(GTK_WINDOW_TOPLEVEL);
+                self->win_frame = (GtkWindow*) gtk_window_new(GTK_WINDOW_TOPLEVEL);
         } else {
                 console_log(self->console, ConsoleLogSevere, "Window has been loaded.");
-                win_frame = (GtkWindow*) gtk_builder_get_object(builder, "win-main-frame");
-                GtkStatusbar* sb_status = (GtkStatusbar*) gtk_builder_get_object(builder, "sb-main");
-                GtkTextView* tv_console = (GtkTextView*) gtk_builder_get_object(builder, "tv-console");
+                self->win_frame = __app_builder_get(self, builder, "win-main-frame");
+                self->sb_status = (GtkStatusbar*) __app_builder_get(self, builder, "sb-main");
+                GtkTextView* tv_console = (GtkTextView*) __app_builder_get(self, builder, "tv-console");
                 if (tv_console == nullptr) {
                         console_log(self->console, ConsoleLogSevere, "Cannot load gtk console widget. Use fallback console.");
                 } else {
@@ -361,80 +429,56 @@ void app_run(struct app* self)
                 }
 
                 // Load menus and connect signals.
-                GtkMenuItem* mi_scan_conn = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-scan-connection");
-                if (mi_scan_conn == nullptr) {
-                        console_log(self->console, ConsoleLogSevere, "Cannot load scan connection menu item.");
-                } else {
+                GtkMenuItem* mi_scan_conn = __app_builder_get(self, builder, "mi-scan-connection");
+                if (mi_scan_conn)
                         g_signal_connect(G_OBJECT(mi_scan_conn), "activate",
                                          G_CALLBACK(__app_on_scan_connections), self);
-                }
-                GtkMenuItem* mi_conn2dev = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-connect2device");
-                if (mi_conn2dev == nullptr) {
-                        console_log(self->console, ConsoleLogSevere, "Cannot load connect-to-avr menu item.");
-                } else {
+
+                GtkMenuItem* mi_conn2dev = __app_builder_get(self, builder, "mi-connect2device");
+                if (mi_conn2dev)
                         g_signal_connect(G_OBJECT(mi_conn2dev), "activate",
                                          G_CALLBACK(__app_on_connect2dev), self);
-                }
-                GtkMenuItem* mi_conn2localdev = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-add-local-dev");
-                if (mi_conn2localdev == nullptr) {
-                        console_log(self->console, ConsoleLogSevere, "Cannot load add-local-device menu item.");
-                } else {
+
+                GtkMenuItem* mi_conn2localdev = __app_builder_get(self, builder, "mi-add-local-dev");
+                if (mi_conn2localdev)
                         g_signal_connect(G_OBJECT(mi_conn2localdev), "activate",
                                          G_CALLBACK(__app_on_add_local_device), self);
-                }
-                GtkMenuItem* mi_helpabout = (GtkMenuItem*) gtk_builder_get_object(builder, "mi-helpabout");
-                if (mi_helpabout == nullptr) {
-                        console_log(self->console, ConsoleLogSevere, "Cannot load help about menu item.");
-                } else {
+
+                GtkMenuItem* mi_helpabout = __app_builder_get(self, builder, "mi-helpabout");
+                if (mi_helpabout)
                         g_signal_connect(G_OBJECT(mi_helpabout), "activate",
                                          G_CALLBACK(__app_on_help_about), self);
-                }
 
                 // Load buttons and connect signals.
-                GtkButton* bt_capture = (GtkButton*) gtk_builder_get_object(builder, "bt-capture");
-                if (bt_capture == nullptr) {
-                        console_log(self->console, ConsoleLogSevere, "Cannot load device capture button.");
-                } else {
+                GtkButton* bt_capture = __app_builder_get(self, builder, "bt-capture");
+                if (bt_capture)
                         g_signal_connect(G_OBJECT(bt_capture), "clicked",
-                                         G_CALLBACK(__app_capture_device), self);
-                }
+                                         G_CALLBACK(__app_on_capture_device), self);
 
                 // Load impl UIs and connect signals.
-                GtkAboutDialog* dl_helpabout = (GtkAboutDialog*) gtk_builder_get_object(builder, "dl-helpabout");
-                GtkDialog* dl_conn = (GtkDialog*) gtk_builder_get_object(builder, "dl-connection");
-                GtkComboBoxText* cb_selected = (GtkComboBoxText*) gtk_builder_get_object(builder, "cb-conn-selected");
-                GtkButton* bt_conn_confirm = (GtkButton*) gtk_builder_get_object(builder, "bt-conn-confirm");
-                GtkButton* bt_conn_cancel = (GtkButton*) gtk_builder_get_object(builder, "bt-conn-cancel");
-                if (dl_helpabout == nullptr || dl_conn == nullptr || cb_selected == nullptr ||
-                    bt_conn_confirm == nullptr || bt_conn_cancel == nullptr) {
-                        console_log(self->console, ConsoleLogSevere, "Cannot load impl UIs");
-                } else {
-                        self->win_frame = win_frame,
-                        self->sb_status = sb_status;
-                        self->dl_helpabout = dl_helpabout;
-                        self->dl_connection = dl_conn;
-                        self->cb_selected = cb_selected;
-                        self->bt_conn_confirm = bt_conn_confirm;
-                        self->bt_conn_cancel = bt_conn_cancel;
-                }
-                g_timeout_add(100, __app_fetch_device_console, self);
-                g_object_unref(builder);
+                self->dl_helpabout = __app_builder_get(self, builder, "dl-helpabout");
+                self->dl_connection = __app_builder_get(self, builder, "dl-connection");
+                self->cb_selected = __app_builder_get(self, builder, "cb-conn-selected");
+                self->bt_conn_confirm = __app_builder_get(self, builder, "bt-conn-confirm");
+                self->bt_conn_cancel = __app_builder_get(self, builder, "bt-conn-cancel");
+                self->lb_dev_files = __app_builder_get(self, builder, "lb-dev-files");
+
+                g_timeout_add(100, __app_on_fetch_device_console, self);
+                __app_builder_free(self, builder);
         }
 
         __app_update(self);
-        gtk_window_set_position(GTK_WINDOW(win_frame), GTK_WIN_POS_CENTER);
-        gtk_widget_realize(GTK_WIDGET(win_frame));
+        gtk_window_set_position(GTK_WINDOW(self->win_frame), GTK_WIN_POS_CENTER);
+        gtk_widget_realize(GTK_WIDGET(self->win_frame));
 
         __app_push_status(self, AERIAL_VERSION_STRING);
 
         // Install signals.
-        g_signal_connect(GTK_WIDGET(win_frame), "destroy", gtk_main_quit, NULL);
+        g_signal_connect(GTK_WIDGET(self->win_frame), "destroy", G_CALLBACK(__app_on_quit), self);
 
         // Enter the main loop.
-        gtk_widget_show_all(GTK_WIDGET(win_frame));
+        gtk_widget_show_all(GTK_WIDGET(self->win_frame));
         gtk_main();
-
-        __app_pop_status(self);
 }
 
 
