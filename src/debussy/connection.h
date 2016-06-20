@@ -28,8 +28,8 @@ typedef bool                    (*f_Conn_Is_Connected) (const struct connection*
 typedef struct action_protocol* (*f_Conn_Get_Action) (struct connection* self, bool is_blocking);
 typedef void                    (*f_Conn_Puts) (struct connection* self, const char* s);
 typedef const char*             (*f_Conn_Gets) (struct connection* self);
-typedef void                    (*f_Conn_Put_Directory_Structure) (struct connection* self, struct directory* src);
-typedef void                    (*f_Conn_Get_Directory_Structure) (struct connection* self, struct directory* dst);
+typedef void                    (*f_Conn_Put_Directory) (struct connection* self, struct directory* src);
+typedef void                    (*f_Conn_Get_Directory) (struct connection* self, struct directory* dst);
 typedef void                    (*f_Conn_Put_File) (struct connection* self, struct file* src);
 typedef void                    (*f_Conn_Get_File) (struct connection* self, struct file* dst);
 typedef void                    (*f_Conn_Put_Audio_Player_State) (struct connection* self, struct audioplayer_state* aps);
@@ -47,8 +47,8 @@ struct connection {
         f_Conn_Get_Action               f_get_action;
         f_Conn_Puts                     f_puts;
         f_Conn_Gets                     f_gets;
-        f_Conn_Put_Directory_Structure  f_put_directory_structure;
-        f_Conn_Get_Directory_Structure  f_get_directory_structure;
+        f_Conn_Put_Directory            f_put_directory;
+        f_Conn_Get_Directory            f_get_directory;
         f_Conn_Put_File                 f_put_file;
         f_Conn_Get_File                 f_get_file;
         f_Conn_Put_Audio_Player_State   f_put_audio_player_state;
@@ -67,8 +67,8 @@ void                    conn_init(struct connection* self, struct console* conso
                                   f_Conn_Get_Action f_get_action,
                                   f_Conn_Puts f_puts,
                                   f_Conn_Gets f_gets,
-                                  f_Conn_Put_Directory_Structure f_put_directory_structure,
-                                  f_Conn_Get_Directory_Structure f_get_directory_structure,
+                                  f_Conn_Put_Directory f_put_directory,
+                                  f_Conn_Get_Directory f_get_directory,
                                   f_Conn_Put_File f_put_file,
                                   f_Conn_Get_File f_get_file,
                                   f_Conn_Put_Audio_Player_State f_put_audio_player_state,
@@ -83,8 +83,8 @@ bool                    conn_is_connected(const struct connection* self);
 struct action_protocol* conn_get_action(struct connection* self, bool is_blocking);
 void                    conn_puts(struct connection* self, const char* s);
 const char*             conn_gets(struct connection* self);
-void                    conn_put_directory_structure(struct connection* self, struct directory* src);
-void                    conn_get_directory_structure(struct connection* self, struct directory* dst);
+void                    conn_put_directory(struct connection* self, struct directory* src);
+void                    conn_get_directory(struct connection* self, struct directory* dst);
 void                    conn_put_file(struct connection* self, struct file* src);
 void                    conn_get_file(struct connection* self, struct file* dst);
 void                    conn_put_audio_player_state(struct connection* self, struct audioplayer_state* aps);
@@ -112,8 +112,8 @@ bool                    conn_a2h_is_connected(const struct conn_a2h* self);
 struct action_protocol* conn_a2h_get_action(struct conn_a2h* self, bool is_blocking);
 void                    conn_a2h_puts(struct conn_a2h* self, const char* s);
 const char*             conn_a2h_gets(struct conn_a2h* self);
-void                    conn_a2h_put_directory_structure(struct conn_a2h* self, struct directory* src);
-void                    conn_a2h_get_directory_structure(struct conn_a2h* self, struct directory* dst);
+void                    conn_a2h_put_directory(struct conn_a2h* self, struct directory* src);
+void                    conn_a2h_get_directory(struct conn_a2h* self, struct directory* dst);
 void                    conn_a2h_put_file(struct conn_a2h* self, struct file* src);
 void                    conn_a2h_get_file(struct conn_a2h* self, struct file* dst);
 void                    conn_a2h_put_audio_player_state(struct conn_a2h* self, struct audioplayer_state* aps);
@@ -160,8 +160,8 @@ bool                    conn_h2a_is_connected(const struct conn_h2a* self);
 struct action_protocol* conn_h2a_get_action(struct conn_h2a* self, bool is_blocking);
 void                    conn_h2a_puts(struct conn_h2a* self, const char* s);
 const char*             conn_h2a_gets(struct conn_h2a* self);
-void                    conn_h2a_put_directory_structure(struct conn_h2a* self, struct directory* src);
-void                    conn_h2a_get_directory_structure(struct conn_h2a* self, struct directory* dst);
+void                    conn_h2a_put_directory(struct conn_h2a* self, struct directory* src);
+void                    conn_h2a_get_directory(struct conn_h2a* self, struct directory* dst);
 void                    conn_h2a_put_file(struct conn_h2a* self, struct file* src);
 void                    conn_h2a_get_file(struct conn_h2a* self, struct file* dst);
 void                    conn_h2a_put_audio_player_state(struct conn_h2a* self, struct audioplayer_state* aps);
@@ -191,8 +191,8 @@ bool                    conn_local_is_connected(const struct conn_local* self);
 struct action_protocol* conn_local_get_action(struct conn_local* self, bool is_blocking);
 void                    conn_local_puts(struct conn_local* self, const char* s);
 const char*             conn_local_gets(struct conn_local* self);
-void                    conn_local_put_directory_structure(struct conn_local* self, struct directory* src);
-void                    conn_local_get_directory_structure(struct conn_local* self, struct directory* dst);
+void                    conn_local_put_directory(struct conn_local* self, struct directory* src);
+void                    conn_local_get_directory(struct conn_local* self, struct directory* dst);
 void                    conn_local_put_file(struct conn_local* self, struct file* src);
 void                    conn_local_get_file(struct conn_local* self, struct file* dst);
 void                    conn_local_put_audio_player_state(struct conn_local* self, struct audioplayer_state* aps);
