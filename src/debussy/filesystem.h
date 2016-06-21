@@ -101,6 +101,7 @@ typedef bool                    (*f_FileSys_Visit) (const char* curr_path, uint8
 
 typedef void                    (*f_Filesys_Free) (struct filesystem* self);
 typedef struct directory*       (*f_Filesys_Open_Directory) (struct filesystem* self, const char* path, bool is_2create);
+typedef bool                    (*f_Filesys_Is_Directory) (struct filesystem* self, const char* path);
 typedef void                    (*f_Filesys_Close_Directory) (struct filesystem* self, struct directory* dir);
 typedef bool                    (*f_Filesys_Remove_Directory) (struct filesystem* self, struct directory* dir);
 
@@ -115,6 +116,7 @@ struct filesystem {
         char*                           cwd;
         f_Filesys_Free                  f_free;
         f_Filesys_Open_Directory        f_open_directory;
+        f_Filesys_Is_Directory          f_is_directory;
         f_Filesys_Close_Directory       f_close_directory;
         f_Filesys_Remove_Directory      f_remove_directory;
 
@@ -133,6 +135,7 @@ void                    filesys_init(struct filesystem* self, const uint8_t type
                                      f_Filesys_Open_Directory f_open_directory,
                                      f_Filesys_Close_Directory f_close_directory,
                                      f_Filesys_Remove_Directory f_remove_directory,
+                                     f_Filesys_Is_Directory f_is_directory,
                                      f_Filesys_Open_File f_open_file,
                                      f_Filesys_Close_File f_close_file,
                                      f_Filesys_Remove_File f_remove_file,
@@ -144,6 +147,7 @@ bool                    filesys_clone_file(const struct filesystem* self, struct
 void                    filesys_scan(struct filesystem* self, const char* path, f_FileSys_Visit f_visit, void* user_data);
 
 struct directory*       filesys_open_directory(struct filesystem* self, const char* path, bool is_2create);
+bool                    filesys_is_directory(struct filesystem* self, const char* path);
 void                    filesys_close_directory(struct filesystem* self, struct directory* dir);
 bool                    filesys_remove_directory(struct filesystem* self, struct directory* dir);
 
@@ -188,6 +192,7 @@ void                    fs_posix_free(struct fs_posix* self);
 struct dir_posix*       fs_posix_open_directory(struct fs_posix* self, const char* path, bool is_2create);
 void                    fs_posix_close_directory(struct fs_posix* self, struct dir_posix* dir);
 bool                    fs_posix_remove_directory(struct fs_posix* self, struct dir_posix* dir);
+bool                    fs_posix_is_directory(struct fs_posix* self, const char* path);
 
 struct file_posix*      fs_posix_open_file(struct fs_posix* self, const char* file_path, bool is_2create);
 void                    fs_posix_close_file(struct fs_posix* self, struct file_posix* file);
@@ -202,6 +207,7 @@ typedef struct __dirstream DIR;
 struct dirent;
 struct dir_posix {
         struct directory        __parent;
+        char*                   actual_path;
         DIR*                    ds;
         struct dirent*          entry;
 };
@@ -209,8 +215,12 @@ struct dir_posix {
 /*
  * <dir_posix> public
  */
-struct dir_posix*       dir_posix_create(const char* path, bool is_2create);
-bool                    dir_posix_init(struct dir_posix* self, const char* path, bool is_2create);
+struct dir_posix*       dir_posix_create(const char* base, const char* cwd, const char* path, bool is_2create);
+bool                    dir_posix_init(struct dir_posix* self,
+                                       const char* base,
+                                       const char* cwd,
+                                       const char* path,
+                                       bool is_2create);
 void                    dir_posix_free(struct dir_posix* self);
 bool                    dir_posix_first(struct dir_posix* self, struct fs_entity* ent);
 bool                    dir_posix_next(struct dir_posix* self, struct fs_entity* ent);
@@ -221,14 +231,19 @@ bool                    dir_posix_next(struct dir_posix* self, struct fs_entity*
  */
 struct file_posix {
         struct file             __parent;
+        char*                   actual_path;
         int                     fd;
 };
 
 /*
  * <file_posix> public
  */
-struct file_posix*      file_posix_create(const char* path, bool is_2create);
-bool                    file_posix_init(struct file_posix* self, const char* path, bool is_2create);
+struct file_posix*      file_posix_create(const char* base, const char* cwd, const char* path, bool is_2create);
+bool                    file_posix_init(struct file_posix* self,
+                                        const char* base,
+                                        const char* cwd,
+                                        const char* path,
+                                        bool is_2create);
 void                    file_posix_free(struct file_posix* self);
 size_t                  file_posix_read(struct file_posix* self, size_t num_bytes, void* buf);
 size_t                  file_posix_write(struct file_posix* self, size_t num_bytes, const void* buf);
