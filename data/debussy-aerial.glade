@@ -86,7 +86,7 @@
     <property name="version">0.1.0</property>
     <property name="copyright" translatable="yes">Copyright © 2016 Chifeng Wen</property>
     <property name="authors">Chifeng Wen</property>
-    <property name="logo_icon_name">emblem-unreadable</property>
+    <property name="logo">debussy-logo.png</property>
     <property name="license_type">gpl-2-0</property>
     <child internal-child="vbox">
       <object class="GtkBox" id="aboutdialog-vbox1">
