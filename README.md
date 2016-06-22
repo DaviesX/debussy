@@ -1,4 +1,7 @@
 # debussy
+
+![alt tag](data/debussy-logo.png)
+
 ###### *Brought to you by Chifeng Wen*
 A physically based high quality midi synthesizer for embedded system.
 
