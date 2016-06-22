@@ -119,6 +119,7 @@ static inline int log2_int_c(int x)
 {                                                                                                          \
         free((_self)->chunk);                                                                              \
         free((_self)->bins);                                                                               \
+        free((_self)->recycled);                                                                           \
 }
 
 #define set_flush(_self)                                                                                   \

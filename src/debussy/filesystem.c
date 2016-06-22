@@ -198,6 +198,7 @@ const char* filesys_connect_directory(struct filesystem* self, const char* path)
                 return self->cwd;
         } else {
                 // New directory is invalid.
+                free((void*) new_path);
                 return nullptr;
         }
 }
@@ -311,7 +312,6 @@ void filesys_test_connect_directory()
                 printf("failed to create directory\n");
                 abort();
         }
-        filesys_close_directory(fs, dir);
 
         filesys_connect_directory(fs, "a/b/c/d");
         printf("dir: %s\n", filesys_working_directory(fs));
@@ -404,22 +404,31 @@ void fs_posix_init(struct fs_posix* self, const char* base)
                      (f_Filesys_2string) fs_posix_2string);
 }
 
+static void __fs_posix_close_file(struct fs_posix* self, struct file_posix* file)
+{
+        file_free(&file->__parent), free(file);
+}
+
+static void __fs_posix_close_directory(struct fs_posix* self, struct dir_posix* dir)
+{
+        dir_free(&dir->__parent), free(dir);
+}
+
 void fs_posix_free(struct fs_posix* self)
 {
         struct file_posix* file;
         set_for_each(&self->open_files, file,
-                fs_posix_close_file(self, file);
+                __fs_posix_close_file(self, file);
         );
         set_free(&self->open_files);
 
         struct dir_posix* dir;
         set_for_each(&self->open_dirs, dir,
-                fs_posix_close_directory(self, dir);
+                __fs_posix_close_directory(self, dir);
         );
         set_free(&self->open_dirs);
 
         free(self->base);
-        memset(self, 0, sizeof(*self));
 }
 
 static const char* __posix_get_full_path(const char* base, const char* cwd, const char* file_path)
@@ -461,8 +470,10 @@ void fs_posix_close_directory(struct fs_posix* self, struct dir_posix* dir)
         set_find(&self->open_dirs, dir, fs_entity_hash, fs_entity_is_equal, &iter);
         if (set_iter_has_next(&iter, &self->open_dirs)) {
                 // Valid directory.
-                dir_free(&dir->__parent), free(dir);
+                __fs_posix_close_directory(self, dir);
                 set_remove_at(&self->open_dirs, &iter);
+        } else {
+                // Directory has already been closed.
         }
 }
 
@@ -528,11 +539,11 @@ void fs_posix_close_file(struct fs_posix* self, struct file_posix* file)
         set_find(&self->open_files, file, fs_entity_hash, fs_entity_is_equal, &iter);
         if (set_iter_has_next(&iter, &self->open_files)) {
                 // Valid file.
+                __fs_posix_close_file(self, file);
                 set_remove_at(&self->open_files, &iter);
-                file_free(&file->__parent), free(file);
-        } else
-                // Invalid pointer.
-                abort();
+        } else {
+                // File has already been closed.
+        }
 }
 
 bool fs_posix_remove_file(struct fs_posix* self, struct file_posix* file)
