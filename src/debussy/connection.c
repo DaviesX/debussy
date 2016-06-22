@@ -600,7 +600,7 @@ const char* conn_local_2string(const struct conn_local* self)
 void conn_local_test_get_path()
 {
         struct console* console = stdconsole_create();
-        struct filesystem* base = &fs_posix_create(".")->__parent;
+        struct filesystem* base = &fs_posix_create("./data")->__parent;
         struct connection* conn = &conn_local_create(console, base)->__parent;
         bool has_next;
         do {
