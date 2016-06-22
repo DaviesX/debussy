@@ -39,11 +39,11 @@
 			<Add directory="../src/debussy" />
 		</Compiler>
 		<Linker>
-			<Add option="../build/libdebussy64.a" />
+			<Add option="../lib/libdebussy64.a" />
+			<Add option="../lib/libportaudio.a" />
 			<Add option="`pkg-config gtk+-3.0 --libs`" />
 			<Add option="`pkg-config libudev --libs`" />
 			<Add option="-march=native" />
-			<Add library="../build/libportaudio.a" />
 		</Linker>
 		<Unit filename="../src/utest/utest64.c">
 			<Option compilerVar="CC" />

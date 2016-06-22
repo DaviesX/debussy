@@ -14,12 +14,12 @@
 		<Project filename="hostconnprogram.cbp">
 			<Depends filename="debussy.cbp" />
 		</Project>
-		<Project filename="debussy64.cbp" />
 		<Project filename="utests.cbp">
 			<Depends filename="debussy64.cbp" />
 		</Project>
 		<Project filename="utestavr.cbp">
 			<Depends filename="debussy.cbp" />
 		</Project>
+		<Project filename="debussy64.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

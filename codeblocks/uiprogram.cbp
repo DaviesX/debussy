@@ -42,8 +42,8 @@
 			<Add directory="../src/debussy" />
 		</Compiler>
 		<Linker>
+			<Add option="../lib/libdebussy.a" />
 			<Add option="-mmcu=atmega32" />
-			<Add library="../build/libdebussy.a" />
 		</Linker>
 		<ExtraCommands>
 			<Add after="avr-size $(TARGET_OUTPUT_FILE)" />
