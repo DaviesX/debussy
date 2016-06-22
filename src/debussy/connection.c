@@ -51,7 +51,9 @@ void conn_init(struct connection* self, struct console* console, const char* id,
 
 void conn_free(struct connection* self)
 {
-        self->f_free(self), free(self->id), memset(self, 0, sizeof(*self));
+        self->f_free(self);
+        free(self->id);
+        memset(self, 0, sizeof(*self));
 }
 
 bool conn_conect(struct connection* self)
@@ -447,6 +449,10 @@ bool conn_local_init(struct conn_local* self, struct console* console, struct fi
                 self->base = base;
                 self->is_connected = false;
 
+                self->cached_file_list = nullptr;
+                self->n_cached = 0;
+                self->n_fetched = 0;
+
                 const char* base_id = filesys_2string(base);
                 conn_init(&self->__parent, console, base_id, ConnectionHostLocal,
                           (f_Conn_Free) conn_local_free,
@@ -471,6 +477,13 @@ bool conn_local_init(struct conn_local* self, struct console* console, struct fi
 
 void conn_local_free(struct conn_local* self)
 {
+        // Clear file list.
+        if (self->cached_file_list) {
+                int i;
+                for (i = 0; i < self->n_cached; i ++)
+                        free(self->cached_file_list[i]);
+                free(self->cached_file_list);
+        }
         memset(self, 0, sizeof(*self));
 }
 
@@ -518,9 +531,42 @@ void conn_local_put_path(struct conn_local* self, const char* path, bool has_nex
         abort();
 }
 
-const char* conn_local_get_path(struct conn_local* self, bool has_next)
+static bool __conn_local_visit_path(const char* path, uint8_t depth, void* user_data)
 {
-        abort();
+        struct conn_local* self = (struct conn_local*) user_data;
+        struct console* console = self->__parent.console;
+        console_log(console, ConsoleLogNormal, "Fetching %s", path);
+        self->cached_file_list = realloc(self->cached_file_list, sizeof(char*)*++self->n_cached);
+        self->cached_file_list[self->n_cached - 1] = strdup(path);
+        return true;
+}
+
+const char* conn_local_get_path(struct conn_local* self, bool* has_next)
+{
+        if (self->n_fetched == self->n_cached) {
+                // Clear previous values and update file list as previous data was all transmitted.
+                if (self->cached_file_list && self->n_cached != 0) {
+                        int i;
+                        for (i = 0; i < self->n_cached; i ++) {
+                                free(self->cached_file_list[i]);
+                        }
+                        self->n_cached = 0;
+                }
+                filesys_scan(self->base, "/", __conn_local_visit_path, self);
+                self->n_fetched = 0;
+
+                if (self->n_cached > 0) {
+                        // We now have valid data.
+                        *has_next = self->n_fetched + 1 < self->n_cached;
+                        return self->cached_file_list[self->n_fetched ++];
+                } else {
+                        *has_next = false;
+                        return nullptr;
+                }
+        } else {
+                *has_next = self->n_fetched + 1 < self->n_cached;
+                return self->cached_file_list[self->n_fetched ++];
+        }
 }
 
 void conn_local_put_file(struct conn_local* self, struct file* src)
@@ -547,5 +593,23 @@ const char* conn_local_2string(const struct conn_local* self)
 {
         return filesys_2string(self->base);
 }
+
+/*
+ * <conn_local> test cases.
+ */
+void conn_local_test_get_path()
+{
+        struct console* console = stdconsole_create();
+        struct filesystem* base = &fs_posix_create(".")->__parent;
+        struct connection* conn = &conn_local_create(console, base)->__parent;
+        bool has_next;
+        do {
+                conn_get_path(conn, &has_next);
+        } while (has_next);
+        console_free(console), free(console);
+        filesys_free(base), free(base);
+        conn_free(conn), free(conn);
+}
+
 
 #endif  // ARCH_X86_64

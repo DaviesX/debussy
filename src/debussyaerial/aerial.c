@@ -317,6 +317,12 @@ void __app_on_catch_device_files(GtkWidget* widget, gpointer user_data)
 
         if (self->curr_conn) {
                 // Get file entries into the list box.
+                bool has_next;
+                do {
+                        const char* path = conn_get_path(self->curr_conn, &has_next);
+                        if (path)
+                                gtk_container_add(GTK_CONTAINER(self->lb_dev_files), gtk_label_new(path));
+                } while (has_next);
         } else {
                 GtkWidget* lb_no_dev = gtk_label_new("No device is connected");
                 gtk_container_add(GTK_CONTAINER(self->lb_dev_files), lb_no_dev);

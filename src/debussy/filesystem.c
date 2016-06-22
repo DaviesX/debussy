@@ -244,7 +244,7 @@ static void __filesys_scan_recur(struct filesystem* self, const char* path, int 
                 }
                 fs_entity_free(&ent);
         } while (dir_next(dir, &ent));
-        filesys_close_directory(self, dir), free(dir);
+        filesys_close_directory(self, dir);
 }
 
 void filesys_scan(struct filesystem* self, const char* path, f_FileSys_Visit f_visit, void* user_data)

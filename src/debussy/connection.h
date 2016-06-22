@@ -176,6 +176,11 @@ const char*             conn_h2a_2string(const struct conn_h2a* self);
 struct conn_local {
         struct connection   __parent;
         struct filesystem*  base;
+
+        char**              cached_file_list;
+        int                 n_cached;
+        int                 n_fetched;
+
         bool                is_connected;
 };
 
@@ -192,12 +197,17 @@ struct action_protocol* conn_local_get_action(struct conn_local* self, bool is_b
 void                    conn_local_puts(struct conn_local* self, const char* s);
 const char*             conn_local_gets(struct conn_local* self);
 void                    conn_local_put_path(struct conn_local* self, const char* path, bool has_next);
-const char*             conn_local_get_path(struct conn_local* self, bool has_next);
+const char*             conn_local_get_path(struct conn_local* self, bool* has_next);
 void                    conn_local_put_file(struct conn_local* self, struct file* src);
 void                    conn_local_get_file(struct conn_local* self, struct file* dst);
 void                    conn_local_put_audio_player_state(struct conn_local* self, struct audioplayer_state* aps);
 void                    conn_local_get_audio_player_state(struct conn_local* self, struct audioplayer_state* aps);
 const char*             conn_local_2string(const struct conn_local* self);
+
+/*
+ * <conn_local> test cases.
+ */
+void conn_local_test_get_path();
 
 
 #endif // ARCH_X86_64
