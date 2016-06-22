@@ -235,12 +235,12 @@ static void __filesys_scan_recur(struct filesystem* self, const char* path, int 
                 const char* curr_path = fs_entity_get_path(&ent);
                 char* end = strrchr(curr_path, '\0');
                 if (*(end - 1) != '.') {
+                        if (filesys_is_directory(self, curr_path))
+                                __filesys_scan_recur(self, curr_path, depth + 1, f_visit, user_data);
                         if (!f_visit(curr_path, depth, user_data)) {
                                 fs_entity_free(&ent);
                                 break;
                         }
-                        if (filesys_is_directory(self, curr_path))
-                                __filesys_scan_recur(self, curr_path, depth + 1, f_visit, user_data);
                 }
                 fs_entity_free(&ent);
         } while (dir_next(dir, &ent));
@@ -463,18 +463,28 @@ void fs_posix_close_directory(struct fs_posix* self, struct dir_posix* dir)
                 // Valid directory.
                 dir_free(&dir->__parent), free(dir);
                 set_remove_at(&self->open_dirs, &iter);
-        } else
-                // Invalid pointer.
-                abort();
+        }
 }
 
-static bool __fs_posix_rmpath(const char* path, uint8_t depth, int* res)
+static bool __fs_posix_rmpath(const char* path, uint8_t depth, void* user_data)
 {
+        struct fs_posix* self = (struct fs_posix*) user_data;
+        const char* cwd = filesys_working_directory(&self->__parent);
+        const char* actual_path = __posix_get_full_path(self->base, cwd, path);
+
         struct stat sb;
-        if (-1 == stat(path, &sb) || -1 == unlink(path))
-                *res = -1;
-        if (!S_ISDIR(sb.st_mode))
-                unlink(path);
+        if (-1 == stat(actual_path, &sb))
+                self->last_err = -1;
+        else {
+                if (S_ISDIR(sb.st_mode)) {
+                        if (-1 == rmdir(actual_path))
+                                self->last_err = -1;
+                } else if (S_ISREG(sb.st_mode) || S_ISLNK(sb.st_mode)) {
+                        if (-1 == unlink(actual_path))
+                                self->last_err = -1;
+                }
+        }
+        free((void*) actual_path);
         return true;
 }
 
@@ -482,9 +492,13 @@ bool fs_posix_remove_directory(struct fs_posix* self, struct dir_posix* dir)
 {
         const char* path = strdup(dir_get_path(&dir->__parent));
         fs_posix_close_directory(self, dir);
-        int res = 0;
-        filesys_scan(&self->__parent, path, (f_FileSys_Visit) __fs_posix_rmpath, &res), free((void*) path);
-        return res != -1;
+        // Remove the subdirectories.
+        self->last_err = 0;
+        filesys_scan(&self->__parent, path, __fs_posix_rmpath, self);
+        // Remove the directory.
+        __fs_posix_rmpath(path, 0, self);
+        free((void*) path);
+        return self->last_err != -1;
 }
 
 bool fs_posix_is_directory(struct fs_posix* self, const char* path)
@@ -607,8 +621,9 @@ void dir_posix_free(struct dir_posix* self)
 static void __dir_posix_fill_fs_entity(struct dir_posix* self, struct fs_entity* ent)
 {
         char buf[BUFSIZ];
-        int l = strlen(dir_get_path(&self->__parent));
-        strcpy(buf, self->actual_path);
+        const char* virtual_path = dir_get_path(&self->__parent);
+        int l = strlen(virtual_path);
+        strcpy(buf, virtual_path);
         if (buf[l - 1] != '/')
                 buf[l ++] = '/';
         strcpy(&buf[l], self->entry->d_name);

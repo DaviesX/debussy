@@ -177,6 +177,7 @@ struct file_posix;
 struct fs_posix {
         struct filesystem       __parent;
         char*                   base;
+        int                     last_err;
         set_templ(struct dir_posix*, void*) open_dirs;
         set_templ(struct file_posix*, void*) open_files;
 
