@@ -119,10 +119,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/musicsheet.h" />
-		<Unit filename="../src/debussy/noteplayer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../src/debussy/noteplayer.h" />
 		<Unit filename="../src/debussy/scheduler.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -131,6 +127,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../src/debussy/spiioexp.h" />
+		<Unit filename="../src/debussy/synthesizer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/debussy/synthesizer.h" />
 		<Unit filename="../src/debussy/types.h" />
 		<Unit filename="../src/debussy/usbconfig.h" />
 		<Extensions>
