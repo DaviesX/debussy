@@ -5,6 +5,8 @@
 ###### *Brought to you by Chifeng Wen*
 A physically based high quality midi synthesizer for embedded system.
 
+![alt tag](data/debussy Aerial - 0.0.1.png)
+
 ### Grant Permission to hidraw device on Linux
 Create a file named 99-hidraw-permissions.rules at /etc/udev/rules.d with this line:
 ```KERNEL=="hidraw*", MODE="0666"```
