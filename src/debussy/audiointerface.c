@@ -106,6 +106,7 @@ uint16_t audioif_sampling_rate_avr()
 #  include "../../lib/portaudio.h"
 
 static f_Audioif_Fn_Mono_Float  g_fn_float = nullptr;
+static PaStream*                g_stream = nullptr;
 
 static int __audioif_write_floats(const void *in, void *out, unsigned long num_samples,
                                   const PaStreamCallbackTimeInfo* time_info,
@@ -124,21 +125,21 @@ bool audioif_on_64()
 
 bool audioif_off_64()
 {
-        return paNoError == Pa_Terminate();
+        return (!g_stream || paNoError == Pa_StopStream(g_stream)) && paNoError == Pa_Terminate();
 }
 
 bool audioif_set_24bit_wave_64(f_Audioif_Fn_Mono_Float fn, void* user_data)
 {
-        PaStream *stream;
+
         PaError err;
 
         g_fn_float = fn;
-        err = Pa_OpenDefaultStream(&stream, 0, 1, paFloat32,
+        err = Pa_OpenDefaultStream(&g_stream, 0, 1, paFloat32,
                                    audioif_sampling_rate_64(), 4096,
                                    __audioif_write_floats, user_data);
         if (err != paNoError)
                 return false;
-        return paNoError == Pa_StartStream(stream);
+        return paNoError == Pa_StartStream(g_stream);
 }
 
 uint16_t audioif_sampling_rate_64()
