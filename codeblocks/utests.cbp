@@ -43,6 +43,8 @@
 			<Add option="../lib/libportaudio.a" />
 			<Add option="`pkg-config gtk+-3.0 --libs`" />
 			<Add option="`pkg-config libudev --libs`" />
+			<Add option="-pthread" />
+			<Add option="-lasound" />
 			<Add option="-march=native" />
 		</Linker>
 		<Unit filename="../src/utest/utest64.c">

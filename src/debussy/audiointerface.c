@@ -1,6 +1,8 @@
+#include <types.h>
+#include <audiointerface.h>
+
 #ifndef ARCH_X86_64
 #  include <avr.h>
-#  include <audiointerface.h>
 
 #define DDR     DDRB
 #define PORT    PORTB
@@ -89,20 +91,103 @@ void audioif_output_1bit_avr(uint16_t freq, uint16_t duration, float volume)
         audioif_keep(duration*1000);
 }
 
-void audioif_output_24bit_wave_avr(float fn)
+void audioif_set_24bit_wave_avr(f_Audioif_Fn_Mono_FP16 fn, void* user_data)
 {
+}
+
+uint16_t audioif_sampling_rate_avr()
+{
+        return 44100;
 }
 
 #else
-void audioif_on_x64()
+#  include <assert.h>
+#  include <unistd.h>
+#  include "../../lib/portaudio.h"
+
+static f_Audioif_Fn_Mono_Float  g_fn_float = nullptr;
+
+static int __audioif_write_floats(const void *in, void *out, unsigned long num_samples,
+                                  const PaStreamCallbackTimeInfo* time_info,
+                                  PaStreamCallbackFlags status_flags,
+                                  void *user_data)
 {
+        if (g_fn_float)
+                g_fn_float((float*) out, num_samples, user_data);
+        return 0;
 }
 
-void audioif_off_x64()
+bool audioif_on_64()
 {
+        return paNoError == Pa_Initialize();
 }
 
-void audioif_output_24bit_wave_x64(float fn)
+bool audioif_off_64()
 {
+        return paNoError == Pa_Terminate();
 }
+
+bool audioif_set_24bit_wave_64(f_Audioif_Fn_Mono_Float fn, void* user_data)
+{
+        PaStream *stream;
+        PaError err;
+
+        g_fn_float = fn;
+        err = Pa_OpenDefaultStream(&stream, 0, 1, paFloat32,
+                                   audioif_sampling_rate_64(), 4096,
+                                   __audioif_write_floats, user_data);
+        if (err != paNoError)
+                return false;
+        return paNoError == Pa_StartStream(stream);
+}
+
+uint16_t audioif_sampling_rate_64()
+{
+        return 44100;
+}
+
+/*
+ * <audiointerface> test cases.
+ */
+#include <math.h>
+#include <stdio.h>
+
+struct wave_data {
+        float   freq;
+        float   rate;
+        float   t;
+};
+
+static void __audioif_sine_wave(float *out, size_t num_samples, void* user_data)
+{
+        struct wave_data* data = (struct wave_data*) user_data;
+
+        float dt = 1/data->rate;
+        float w = 2*M_PI*data->freq;
+        int i;
+        for (i = 0; i < num_samples; i ++) {
+                out[i] = sin(w*(data->t + i*dt));
+        }
+        data->t += num_samples*dt;
+        int n_cycles = data->t*w/(2*M_PI);
+        data->t -= n_cycles*2*M_PI/w;
+}
+
+void audioif_test_sine_wave_441_64()
+{
+        assert(audioif_on());
+
+        struct wave_data data;
+        data.freq = 440;
+        data.rate = audioif_sampling_rate();
+        data.t = 0;
+
+        audioif_set_24bit_wave(__audioif_sine_wave, &data);
+
+        sleep(2);
+
+        assert(audioif_off());
+}
+
+
 #endif // ARCH_X86_64
