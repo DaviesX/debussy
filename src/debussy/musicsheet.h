@@ -2,12 +2,8 @@
 #define MUSICSHEET_H_INCLUDED
 
 #include <types.h>
+#include <synthesizer.h>
 
-/*
- * <note> decl
- */
-struct note {
-};
 
 /*
  * <musicsheet_iter>
@@ -19,6 +15,7 @@ struct musicsheet_iter {
  * <musicsheet> decl
  */
 struct file;
+struct note;
 struct musicsheet {
 };
 
@@ -34,7 +31,7 @@ void            musicsheet_get_iter_by_progress(struct musicsheet* self, float p
 void            musicsheet_get_iter_by_note_id(struct musicsheet* self, uint32_t note_id, struct musicsheet_iter* iter);
 void            musicsheet_insert_note_at(struct musicsheet* self, struct musicsheet_iter* iter, struct note* note);
 void            musicsheet_remove_note_at(struct musicsheet* self, struct musicsheet_iter* iter);
-void            musicsheet_play_next(struct musicsheet* self, struct musicsheet_iter* iter);
+void            musicsheet_play_next(struct musicsheet* self, struct musicsheet_iter* iter, struct synth* synth);
 void            musicsheet_set_tempo(struct musicsheet* self, uint8_t bpm);
 
 /*

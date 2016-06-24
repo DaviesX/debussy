@@ -44,7 +44,7 @@ void musicsheet_remove_note_at(struct musicsheet* self, struct musicsheet_iter* 
 {
 }
 
-void musicsheet_play_next(struct musicsheet* self, struct musicsheet_iter* iter)
+void musicsheet_play_next(struct musicsheet* self, struct musicsheet_iter* iter, struct synth* synth)
 {
 }
 
