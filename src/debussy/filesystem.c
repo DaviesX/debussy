@@ -360,6 +360,12 @@ void filesys_test_connect_directory()
         printf("dir: %s\n", filesys_working_directory(fs));
         assert(!strcmp("/1/2/3/4/5/6", filesys_working_directory(fs)));
 
+        filesys_connect_directory(fs, "/");
+        struct file* f = filesys_open_file(fs, "data/debussy-logo.png", false);
+        assert(f);
+        uint8_t buf[100];
+        assert(100 == file_read(f, 100, buf));
+
         filesys_free(fs), free(fs);
 }
 
@@ -436,16 +442,25 @@ static const char* __posix_get_full_path(const char* base, const char* cwd, cons
         int l = strlen(file_path),
             m = strlen(base),
             n = strlen(cwd);
+
         char* path;
         path = strcpy(malloc(l + m + n + 2), base);
-        if (path[m - 1] == '/') m --;
+        if (path[m - 1] == '/')
+                // base end with a '/', we should truncate it.
+                m --;
+
         if (file_path[0] != '/') {
                 // Relative path.
                 strcpy(&path[m], cwd);
-                path[m + n ++] = '/';
+                if (path[m + n - 1] != '/') {
+                        // cwd doesn't end with a '/'.
+                        path[m + n] = '/';
+                        n ++;
+                }
         } else
                 // Absolute path.
                 n = 0;
+
         strcpy(&path[m + n], file_path);
         return path;
 }
