@@ -16,6 +16,11 @@ mem_addr_t mem_alloc(size_t n_bytes)
         return malloc(n_bytes);
 }
 
+mem_addr_t mem_realloc(mem_addr_t addr, size_t n_bytes)
+{
+        return realloc(addr, n_bytes);
+}
+
 void mem_free(mem_addr_t addr)
 {
         free(addr);

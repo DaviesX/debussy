@@ -23,6 +23,7 @@ typedef void*   mem_addr_t;
  * <memory> public
  */
 mem_addr_t      mem_alloc(size_t n_bytes);
+mem_addr_t      mem_realloc(mem_addr_t addr, size_t n_bytes);
 void            mem_free(mem_addr_t addr);
 void            mem_read(mem_addr_t addr, size_t n_bytes, void* buf);
 void            mem_write(mem_addr_t addr, size_t n_bytes, const void* buf);
