@@ -2,14 +2,14 @@
 #define SYNTHESIZER_H_INCLUDED
 
 /*
- * <note> decl
+ * <syn_note> decl
  */
-enum NoteInstrument {
-        NoteInstrSynSine,
-        NoteInstrPiano,
+enum SynNoteInstrument {
+        SynNoteInstrSynSine,
+        SynNoteInstrPiano,
 };
 
-struct note {
+struct syn_note {
         uint8_t i_semi;
         uint8_t instrument;
         uint8_t force;
@@ -17,10 +17,10 @@ struct note {
 };
 
 /*
- * <note> public
+ * <syn_note> public
  */
-void            note_init(struct note* self, uint8_t instrument, uint8_t i_semi, uint8_t force);
-void            note_free(struct note* self);
+void            syn_note_init(struct syn_note* self, uint8_t instrument, uint8_t i_semi, uint8_t force);
+void            syn_note_free(struct syn_note* self);
 
 
 /*
@@ -38,12 +38,12 @@ typedef void    (*f_Syn_Run) (struct synth* self);
 typedef void    (*f_Syn_Stop) (struct synth* self);
 
 struct synth {
-        f_Syn_Free      f_free;
-        f_Syn_Run       f_run;
-        f_Syn_Stop      f_stop;
-        float           freq[88];
-        struct note*    notes[16];
-        uint8_t         n_notes;
+        f_Syn_Free              f_free;
+        f_Syn_Run               f_run;
+        f_Syn_Stop              f_stop;
+        float                   freq[88];
+        struct syn_note*        notes[16];
+        uint8_t                 n_notes;
 };
 
 /*
@@ -55,7 +55,7 @@ void            syn_init(struct synth* self,
                          f_Syn_Stop f_stop);
 void            syn_free(struct synth* self);
 float           syn_get_freq(struct synth* self, uint8_t semi);
-uint8_t         syn_hit_note(struct synth* self, struct note* note);
+uint8_t         syn_hit_note(struct synth* self, struct syn_note* note);
 void            syn_release_note(struct synth* self, uint8_t ref);
 void            syn_run(struct synth* self);
 void            syn_stop(struct synth* self);
@@ -66,6 +66,7 @@ void            syn_stop(struct synth* self);
  */
 struct syn_audioif {
         struct synth    __parent;
+        bool            is_on;
 };
 
 /*
@@ -75,6 +76,12 @@ void    syn_aif_init(struct syn_audioif* self);
 void    syn_aif_free(struct syn_audioif* self);
 void    syn_aif_run(struct syn_audioif* self);
 void    syn_aif_stop(struct syn_audioif* self);
+
+/*
+ * <syn_audioif> test cases
+ */
+void    syn_test_multi_notes_sine();
+
 
 
 #endif // SYNTHESIZER_H_INCLUDED

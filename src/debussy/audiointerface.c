@@ -125,7 +125,8 @@ bool audioif_on_64()
 
 bool audioif_off_64()
 {
-        return (!g_stream || paNoError == Pa_StopStream(g_stream)) && paNoError == Pa_Terminate();
+        return (!g_stream || (paNoError == Pa_StopStream(g_stream))) &&
+                paNoError == Pa_Terminate();
 }
 
 bool audioif_set_24bit_wave_64(f_Audioif_Fn_Mono_Float fn, void* user_data)
